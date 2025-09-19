@@ -1,0 +1,14 @@
+services:
+  mysql:
+    image: mysql:8.0-debian
+    container_name: event-planner-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: event_planner
+      MYSQL_USER: eventuser
+      MYSQL_PASSWORD: eventpass
+    ports:
+      - "3306:3306"
+
+volumes:
+  mysql_data:
