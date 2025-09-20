@@ -1,6 +1,5 @@
 import { Knex } from "knex";
 import bcrypt from "bcrypt";
-import { randomUUID } from "node:crypto";
 
 export interface User {
   id?: number;
