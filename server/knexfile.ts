@@ -23,28 +23,6 @@ const config: { [key: string]: Knex.Config } = {
       directory: './src/seeds'
     }
   },
-
-  production: {
-    client: 'mysql2',
-    connection: {
-      host: process.env.DB_HOST!,
-      port: parseInt(process.env.DB_PORT || '3306'),
-      user: process.env.DB_USER!,
-      password: process.env.DB_PASSWORD!,
-      database: process.env.DB_NAME!
-    } as Knex.MySql2ConnectionConfig,
-    pool: {
-      min: 2,
-      max: 10
-    },
-    migrations: {
-      directory: './dist/migrations',
-      extension: 'js'
-    },
-    seeds: {
-      directory: './dist/seeds'
-    }
-  }
 };
 
 module.exports = config;

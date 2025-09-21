@@ -207,7 +207,6 @@ export class AuthController {
             const refreshToken = req.cookies.refreshToken;
 
             if (refreshToken) {
-                // Find user and clear refresh token from database
                 const user = await this.userModel.findByRefreshToken(refreshToken);
                 if (user) {
                     await this.userModel.updateRefreshToken(user.id!, null);
