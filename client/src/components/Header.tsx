@@ -27,10 +27,36 @@ const Header: React.FC<HeaderProps> = ({
     <nav className={`bg-white shadow-lg ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center">
+          <div className="flex items-center space-x-8">
             <Link to="/" className="flex items-center">
               <h1 className="text-2xl font-bold text-indigo-600">Event Planner</h1>
             </Link>
+            
+            {/* Navigation Links */}
+            <div className="hidden md:flex space-x-6">
+              <Link 
+                to="/events" 
+                className="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium transition-colors"
+              >
+                Browse Events
+              </Link>
+              {isAuthenticated && (
+                <>
+                  <Link 
+                    to="/events/my" 
+                    className="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium transition-colors"
+                  >
+                    My Events
+                  </Link>
+                  <Link 
+                    to="/events/create" 
+                    className="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium transition-colors"
+                  >
+                    Create Event
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
           
           {/* Show auth buttons for non-authenticated users */}
@@ -76,18 +102,18 @@ const Header: React.FC<HeaderProps> = ({
                     Dashboard
                   </Link>
                   <Link
-                    to="/profile"
+                    to="/events/my"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     onClick={() => setIsDropdownOpen(false)}
                   >
-                    Profile
+                    My Events
                   </Link>
                   <Link
-                    to="/settings"
+                    to="/events/create"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     onClick={() => setIsDropdownOpen(false)}
                   >
-                    Settings
+                    Create Event
                   </Link>
                   <hr className="my-1" />
                   <button

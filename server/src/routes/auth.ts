@@ -17,8 +17,8 @@ const userModel = new UserModel(db);
 // Initialize controller
 const jwtSecret = process.env.JWT_SECRET || 'secret';
 const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || 'refreshSecret';
-const jwtExpiresIn = process.env.JWT_EXPIRES_IN || '15';
-const jwtRefreshExpiresIn = process.env.JWT_REFRESH_EXPIRES_IN || '7';
+const jwtExpiresIn = process.env.JWT_EXPIRES_IN!;
+const jwtRefreshExpiresIn = process.env.JWT_REFRESH_EXPIRES_IN!;
 const authController = new AuthController(userModel, jwtSecret, jwtRefreshSecret, jwtExpiresIn, jwtRefreshExpiresIn);
 
 // Routes

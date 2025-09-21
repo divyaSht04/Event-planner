@@ -35,23 +35,34 @@ export class AuthController {
 
     private setAuthCookies(res: Response, accessToken: string, refreshToken: string): void {
         res.cookie('accessToken', accessToken, {
-            httpOnly: false,
-            secure: true,
-            sameSite: 'strict',
-            maxAge:  parseInt(this.jwtExpiresIn) || 15,
+            httpOnly: true,
+            secure: false,
+            sameSite: 'lax',
+            maxAge: 15 * 60 * 1000, // 15 minutes
+            path: '/',
         });
 
         res.cookie('refreshToken', refreshToken, {
-            httpOnly: false,
-            secure: true,
-            sameSite: 'strict',
-            maxAge: parseInt(this.jwtExpiresIn) || 15,
+            httpOnly: true,
+            secure: false, 
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days 
+            path: '/',
         });
     }
 
     private clearAuthCookies(res: Response): void {
-        res.clearCookie('accessToken');
-        res.clearCookie('refreshToken');
+        res.clearCookie('accessToken', {
+            path: '/',
+            secure: false,
+            sameSite: 'lax'
+        });
+        res.clearCookie('refreshToken', {
+            path: '/',
+            secure: false,
+            sameSite: 'lax'
+        });
+        console.log('🗑️ Cookies cleared successfully');
     }
 
     async register(req: Request, res: Response): Promise<void> {
@@ -59,23 +70,34 @@ export class AuthController {
             const {email, password, name, phone_number}: CreateUserData = req.body;
 
             if (!email || !password || !name || !phone_number) {
-                res.status(400).json({error: 'Email, password, name, and phone number are required'});
+                res.status(400)
+                .json({error: 'Email, password, name, and phone number are required'});
                 return;
             }
 
             if (password.length < 6) {
-                res.status(400).json({error: 'Password must be at least 6 characters long'});
+                res.status(400)
+                .json({error: 'Password must be at least 6 characters long'});
                 return;
             }
 
             if (phone_number.length < 10) {
-                res.status(400).json({error: 'Phone number must be at least 10 digits long'});
+                res.status(400)
+                .json({error: 'Phone number must be at least 10 digits long'});
                 return;
             }
 
             const existingUser = await this.userModel.findByEmail(email);
             if (existingUser) {
-                res.status(409).json({error: 'User with this email already exists'});
+                res.status(409)
+                .json({error: 'User with this email already exists'});
+                return;
+            }
+
+            const existingPhoneUser = await this.userModel.findByPhoneNumber(phone_number);
+            if (existingPhoneUser) {
+                res.status(409)
+                .json({error: 'User with this phone number already exists'});
                 return;
             }
 
