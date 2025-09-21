@@ -74,6 +74,13 @@ export class UserModel {
       .first();
   }
 
+  async findByPhoneNumber(phoneNumber: string): Promise<User | undefined> {
+    return await this.db("users")
+      .where({ phone_number: phoneNumber })
+      .select(["id", "email", "name", "phone_number", "created_at", "updated_at"])
+      .first();
+  }
+
   async updateRefreshToken(userId: number, refreshToken: string | null): Promise<void> {
     await this.db("users")
       .where({ id: userId })
