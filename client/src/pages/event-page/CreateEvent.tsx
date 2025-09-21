@@ -95,7 +95,6 @@ const CreateEvent: React.FC = () => {
       <Header />
       
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Event</h1>
           <p className="text-gray-600">
@@ -103,7 +102,6 @@ const CreateEvent: React.FC = () => {
           </p>
         </div>
 
-        {/* Error Message */}
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
             <div className="flex">

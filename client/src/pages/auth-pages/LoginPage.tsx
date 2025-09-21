@@ -18,18 +18,10 @@ const LoginPage: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    // Clear error when user starts typing
+    setFormData(prev => ({...prev, [name]: value }));
     if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+      setErrors(prev => ({...prev, [name]: '' }));
     }
-    // Clear auth error when user starts typing
     if (authError) {
       clearError();
     }
@@ -66,7 +58,6 @@ const LoginPage: React.FC = () => {
       navigate(from, { replace: true });
     } catch (error) {
       console.error('Login error:', error);
-      // Error is already handled by the auth context
     }
   };
 
@@ -142,7 +133,6 @@ const LoginPage: React.FC = () => {
             </CustomButton>
           </CustomForm>
 
-          {/* Sign up link */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
