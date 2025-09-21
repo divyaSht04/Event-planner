@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header, Footer } from '../../components';
 import CustomButton from '../../components/CustomButton';
-import { eventService } from '../../services/events/eventService';
+import { eventService } from '../../services/events';
 import { useAuth } from '../../context';
-import type { Event } from '../../services/events/types';
+import type { Event } from '../../services/events';
 
 const EventDetails: React.FC = () => {
   const navigate = useNavigate();

@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Header, Footer } from '../../components';
 import CustomFormField from '../../components/CustomFormField';
 import CustomButton from '../../components/CustomButton';
-import { eventService } from '../../services/events/eventService';
-import type { CreateEventData } from '../../services/events/types';
+import { eventService } from '../../services/events';
+import type { CreateEventData } from '../../services/events';
 
 const CreateEvent: React.FC = () => {
   const navigate = useNavigate();
