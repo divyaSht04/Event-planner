@@ -36,14 +36,14 @@ export class AuthController {
     private setAuthCookies(res: Response, accessToken: string, refreshToken: string): void {
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
-            secure: true,
+            secure: false,
             sameSite: 'strict',
             maxAge:  parseInt(this.jwtExpiresIn) || 15
         });
 
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            secure: true,
+            secure: false,
             sameSite: 'strict',
             maxAge: parseInt(this.jwtExpiresIn) || 15,
         });
@@ -89,6 +89,7 @@ export class AuthController {
            
 
             const user = await this.userModel.create(userData);
+            // console.log('Created user:', user.id);
 
             const accessToken = this.generateAccessToken(user.id!, user.email);
             const refreshToken = this.generateRefreshToken(user.id!, user.email);
@@ -137,7 +138,6 @@ export class AuthController {
 
             await this.userModel.updateRefreshToken(user.id!, refreshToken);
 
-            // Set cookies
             this.setAuthCookies(res, accessToken, refreshToken);
 
             res.json({
@@ -146,6 +146,7 @@ export class AuthController {
                     id: user.id,
                     email: user.email,
                     name: user.name,
+                    phone_number: user.phone_number,
                 },
                 accessToken: accessToken,
                 refreshToken: refreshToken
