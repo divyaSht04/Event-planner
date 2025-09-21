@@ -22,7 +22,7 @@ const jwtRefreshExpiresIn = process.env.JWT_REFRESH_EXPIRES_IN || '7';
 const authController = new AuthController(userModel, jwtSecret, jwtRefreshSecret, jwtExpiresIn, jwtRefreshExpiresIn);
 
 // Routes
-router.post('/register', (req, res) => authController.register(req, res));
+router. post('/register', (req, res) => authController.register(req, res));
 router.post('/login', (req, res) => authController.login(req, res));
 router.post('/refresh', (req, res) => authController.refresh(req, res));
 router.post('/logout', (req, res) => authController.logout(req, res));

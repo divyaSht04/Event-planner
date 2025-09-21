@@ -33,14 +33,22 @@ export class UserModel {
   async create(userData: CreateUserData): Promise<User> {
     const hashedPassword = await bcrypt.hash(userData.password, 10);
 
-    const [user] = await this.db("users")
+    const [insertedId] = await this.db("users")
       .insert({
         email: userData.email,
         password: hashedPassword,
         name: userData.name,
         phone_number: userData.phone_number,
-      })
-      .returning(["id", "email", "name", "phone_number", "created_at", "updated_at"]);
+      });
+
+    const user = await this.db("users")
+      .where({ id: insertedId })
+      .select(["id", "email", "name", "phone_number", "created_at", "updated_at"])
+      .first();
+
+    if (!user) {
+      throw new Error('Failed to create user');
+    }
 
     return user;
   }

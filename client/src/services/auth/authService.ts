@@ -29,9 +29,6 @@ class AuthService {
     }
   }
 
-  /**
-   * Logout user
-   */
   async logout(): Promise<{ message: string }> {
     try {
       const response = await api.post('/auth/logout');
@@ -42,9 +39,7 @@ class AuthService {
     }
   }
 
-  /**
-   * Refresh access token using refresh token
-   */
+
   async refreshToken(): Promise<AuthResponse> {
     try {
       const response = await api.post<AuthResponse>('/auth/refresh');
@@ -55,9 +50,7 @@ class AuthService {
     }
   }
 
-  /**
-   * Get current user profile (if you have this endpoint)
-   */
+
   async getCurrentUser(): Promise<User> {
     try {
       const response = await api.get<{ user: User }>('/auth/me');
@@ -68,9 +61,7 @@ class AuthService {
     }
   }
 
-  /**
-   * Check if user is authenticated by trying to refresh token
-   */
+
   async checkAuth(): Promise<User | null> {
     try {
       const response = await this.refreshToken();
