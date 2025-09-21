@@ -57,8 +57,8 @@ DB_PORT=3306
 DB_USER=eventuser
 DB_PASSWORD=eventpass
 DB_NAME=event_planner
-JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
-JWT_REFRESH_SECRET=your_super_secret_refresh_key_change_this_too
+JWT_SECRET=secret_jwt_key
+JWT_REFRESH_SECRET=_secret_refresh_key
 PORT=3001
 FRONTEND_URL=http://localhost:5173
 ```
