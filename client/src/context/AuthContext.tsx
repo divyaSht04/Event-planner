@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/auth';
-import type { AuthContextType, AuthState, User, RegisterRequest } from '../services/auth/types';
+import type { AuthContextType, AuthState, User, RegisterRequest } from '../services';
 
 // Create the context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,17 +17,14 @@ const initialState: AuthState = {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AuthState>(initialState);
 
-  // Update state helper
   const updateState = (updates: Partial<AuthState>) => {
     setState(prev => ({ ...prev, ...updates }));
   };
 
-  // Clear error
   const clearError = () => {
     updateState({ error: null });
   };
 
-  // Set user and authenticated state
   const setUser = (user: User | null) => {
     updateState({
       user,
@@ -53,11 +50,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user: null,
         isAuthenticated: false,
       });
-      throw error; // Re-throw to allow component to handle
+      throw error;
     }
   };
 
-  // Register function
   const register = async (data: RegisterRequest): Promise<void> => {
     try {
       updateState({ isLoading: true, error: null });
@@ -73,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user: null,
         isAuthenticated: false,
       });
-      throw error; // Re-throw to allow component to handle
+      throw error;
     }
   };
 
@@ -83,9 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await authService.logout();
     } catch (error) {
       console.error('Logout error:', error);
-      // Continue with logout even if API call fails
     } finally {
-      // Clear user state regardless of API call result
       setUser(null);
     }
   };

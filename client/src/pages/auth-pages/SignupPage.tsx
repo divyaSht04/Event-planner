@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { CustomForm, CustomFormField, CustomButton } from '../../components';
+import { useAuth } from '../../context';
 
 const SignupPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { register, isLoading: authLoading, error: authError, clearError } = useAuth();
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -11,13 +15,16 @@ const SignupPage: React.FC = () => {
     confirmPassword: '',
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
         setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+    // Clear auth error when user starts typing
+    if (authError) {
+      clearError();
     }
   };
 
@@ -65,26 +72,19 @@ const SignupPage: React.FC = () => {
     if (!validateForm()) {
       return;
     }
-
-    setIsLoading(true);
     
     try {
-      console.log('Signup attempt:', { 
-        name: formData.name, 
-        email: formData.email, 
-        password: formData.password 
+      await register({
+        name: formData.name,
+        email: formData.email,
+        phone_number: formData.phoneNumber,
+        password: formData.password
       });
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Handle successful signup
-      alert('Account created successfully! (This will be replaced with actual authentication)');
+      // Navigate to home after successful registration
+      navigate('/');
     } catch (error) {
       console.error('Signup error:', error);
-      setErrors({ general: 'Signup failed. Please try again.' });
-    } finally {
-      setIsLoading(false);
+      // Error is already handled by the auth context
     }
   };
 
@@ -103,9 +103,9 @@ const SignupPage: React.FC = () => {
             title="Create Account"
             onSubmit={handleSubmit}
           >
-            {errors.general && (
+            {(authError || errors.general) && (
               <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
-                <p className="text-sm text-red-600">{errors.general}</p>
+                <p className="text-sm text-red-600">{authError || errors.general}</p>
               </div>
             )}
 
@@ -165,13 +165,33 @@ const SignupPage: React.FC = () => {
               required
             />
 
+            <div className="flex items-center">
+              <input
+                id="terms"
+                name="terms"
+                type="checkbox"
+                required
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              />
+              <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
+                I agree to the{' '}
+                <a href="#" className="text-indigo-600 hover:text-indigo-500">
+                  Terms of Service
+                </a>{' '}
+                and{' '}
+                <a href="#" className="text-indigo-600 hover:text-indigo-500">
+                  Privacy Policy
+                </a>
+              </label>
+            </div>
+
             <CustomButton
               type="submit"
               variant="primary"
-              disabled={isLoading}
+              disabled={authLoading}
               className="w-full"
             >
-              {isLoading ? 'Creating Account...' : 'Create Account'}
+              {authLoading ? 'Creating Account...' : 'Create Account'}
             </CustomButton>
           </CustomForm>
 

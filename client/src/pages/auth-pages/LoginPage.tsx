@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { CustomForm, CustomFormField, CustomButton } from '../../components';
+import { useAuth } from '../../context';
 
 const LoginPage: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login, isLoading: authLoading, error: authError, clearError } = useAuth();
+  
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [isLoading, setIsLoading] = useState(false);
+
+  const from = (location.state as any)?.from?.pathname || '/';
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -22,6 +28,10 @@ const LoginPage: React.FC = () => {
         ...prev,
         [name]: ''
       }));
+    }
+    // Clear auth error when user starts typing
+    if (authError) {
+      clearError();
     }
   };
 
@@ -50,23 +60,13 @@ const LoginPage: React.FC = () => {
     if (!validateForm()) {
       return;
     }
-
-    setIsLoading(true);
     
     try {
-      // TODO: Implement actual login API call
-      console.log('Login attempt:', formData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Handle successful login
-      alert('Login successful! (This will be replaced with actual authentication)');
+      await login(formData.email, formData.password);
+      navigate(from, { replace: true });
     } catch (error) {
       console.error('Login error:', error);
-      setErrors({ general: 'Login failed. Please check your credentials.' });
-    } finally {
-      setIsLoading(false);
+      // Error is already handled by the auth context
     }
   };
 
@@ -87,9 +87,9 @@ const LoginPage: React.FC = () => {
             title="Sign In"
             onSubmit={handleSubmit}
           >
-            {errors.general && (
+            {(authError || errors.general) && (
               <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
-                <p className="text-sm text-red-600">{errors.general}</p>
+                <p className="text-sm text-red-600">{authError || errors.general}</p>
               </div>
             )}
 
@@ -115,13 +115,30 @@ const LoginPage: React.FC = () => {
               required
             />
 
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                  Remember me
+                </label>
+              </div>
+              <Link to="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-500">
+                Forgot password?
+              </Link>
+            </div>
+
             <CustomButton
               type="submit"
               variant="primary"
-              disabled={isLoading}
+              disabled={authLoading}
               className="w-full"
             >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {authLoading ? 'Signing in...' : 'Sign In'}
             </CustomButton>
           </CustomForm>
 
