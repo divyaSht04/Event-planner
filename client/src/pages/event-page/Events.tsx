@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Header, Footer } from '../../components';
-import CustomInput from '../../components/CustomInput';
-import CustomButton from '../../components/CustomButton';
+import { CustomFormField, CustomButton } from '../../components';
 import { eventService } from '../../services/events';
 import { useAuth } from '../../context';
 import type { Event } from '../../services/events';
@@ -13,12 +12,12 @@ const Events: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchInput, setSearchInput] = useState(''); // Input field value
-  const [searchTerm, setSearchTerm] = useState(''); // Applied search filter
+  const [titleSearch, setTitleSearch] = useState('');
+  const [locationSearch, setLocationSearch] = useState('');
   const [hasMoreEvents, setHasMoreEvents] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const loadEvents = async (page: number = 1, search: string = '') => {
+  const loadEvents = async (page: number = 1, titleFilter: string = '', locationFilter: string = '') => {
     if (!isAuthenticated) {
       setLoading(false);
       setEvents([]);
@@ -30,10 +29,13 @@ const Events: React.FC = () => {
       setLoading(true);
       setError(null); 
       
+      // Combine title and location searches into one search term
+      const searchTerms = [titleFilter, locationFilter].filter(term => term.trim()).join(' ');
+      
       const response = await eventService.getAllEvents({ 
         page, 
         limit: 10, 
-        search: search || undefined,
+        search: searchTerms || undefined,
         event_type: 'public'
       });
       
@@ -54,26 +56,25 @@ const Events: React.FC = () => {
   };
 
   useEffect(() => {
-    loadEvents(1, searchTerm);
-  }, [isAuthenticated]); // Remove searchTerm from dependencies for manual filtering
+    loadEvents(1, '', ''); // Load all events initially
+  }, [isAuthenticated]);
 
-  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchInput(e.target.value);
+  const handleTitleFilter = () => {
+    loadEvents(1, titleSearch, locationSearch);
   };
 
-  const handleFilter = () => {
-    setSearchTerm(searchInput);
-    setCurrentPage(1);
+  const handleLocationFilter = () => {
+    loadEvents(1, titleSearch, locationSearch);
   };
 
-  const handleClearFilter = () => {
-    setSearchInput('');
-    setSearchTerm('');
-    setCurrentPage(1);
+  const handleClearFilters = () => {
+    setTitleSearch('');
+    setLocationSearch('');
+    loadEvents(1, '', '');
   };
 
   const handleLoadMore = () => {
-    loadEvents(currentPage + 1, searchTerm);
+    loadEvents(currentPage + 1, titleSearch, locationSearch);
   };
 
   const handleEventClick = (eventId: number) => {
@@ -133,43 +134,77 @@ const Events: React.FC = () => {
           </div>
         )}
 
-        {/* Search Bar */}
-        <div className="mb-8">
-          <div className="max-w-2xl">
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <CustomInput
+        {/* Search and Filter Controls */}
+        {isAuthenticated && (
+          <div className="bg-white rounded-lg shadow-md p-4 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Title Search */}
+              <div className="space-y-2">
+                <CustomFormField
                   type="text"
-                  placeholder="Search events by title, description, or location..."
-                  value={searchInput}
-                  onChange={handleSearchInputChange}
-                  className="w-full"
+                  name="Text Search"
+                  label="Search by Title and Description"
+                  placeholder="Event title..."
+                  value={titleSearch}
+                  onChange={(e) => setTitleSearch(e.target.value)}
                 />
-              </div>
-              <CustomButton
-                variant="primary"
-                onClick={handleFilter}
-                disabled={loading}
-              >
-                Filter
-              </CustomButton>
-              {searchTerm && (
                 <CustomButton
                   variant="secondary"
-                  onClick={handleClearFilter}
-                  disabled={loading}
+                  onClick={handleTitleFilter}
+                  className="w-full"
                 >
-                  Clear
+                  Filter by Title
                 </CustomButton>
-              )}
+              </div>
+
+              {/* Location Search */}
+              <div className="space-y-2">
+                <CustomFormField
+                  type="text"
+                  name="locationSearch"
+                  label="Search by Location"
+                  placeholder="Event location..."
+                  value={locationSearch}
+                  onChange={(e) => setLocationSearch(e.target.value)}
+                />
+                <CustomButton
+                  variant="secondary"
+                  onClick={handleLocationFilter}
+                  className="w-full"
+                >
+                  Filter by Location
+                </CustomButton>
+              </div>
+
+              {/* Clear Filters */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Actions
+                </label>
+                <div className="pt-6">
+                  <CustomButton
+                    variant="danger"
+                    onClick={handleClearFilters}
+                    className="w-full"
+                  >
+                    Clear All Filters
+                  </CustomButton>
+                </div>
+              </div>
             </div>
-            {searchTerm && (
-              <div className="mt-2 text-sm text-gray-600">
-                Filtering by: "{searchTerm}"
+
+            {/* Results Summary */}
+            {(titleSearch || locationSearch) && (
+              <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
+                <span>
+                  Filtering events
+                  {titleSearch && ` with title "${titleSearch}"`}
+                  {locationSearch && ` at location "${locationSearch}"`}
+                </span>
               </div>
             )}
           </div>
-        </div>
+        )}
 
         {/* Error Message */}
         {error && (
@@ -208,10 +243,10 @@ const Events: React.FC = () => {
                 ) : (
                   <div>
                     <div className="text-gray-500 text-lg mb-2">
-                      {searchTerm ? 'No events match your search' : 'No public events found'}
+                      {(titleSearch || locationSearch) ? 'No events match your search' : 'No public events found'}
                     </div>
                     <div className="text-gray-400">
-                      {searchTerm ? 'Try adjusting your search terms' : 'Check back later for new events'}
+                      {(titleSearch || locationSearch) ? 'Try adjusting your search terms' : 'Check back later for new events'}
                     </div>
                   </div>
                 )}

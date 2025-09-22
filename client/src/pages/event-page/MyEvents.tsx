@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header, Footer } from '../../components';
-import CustomButton from '../../components/CustomButton';
-import CustomInput from '../../components/CustomInput';
+import { CustomButton, CustomFormField } from '../../components';
 import { eventService } from '../../services/events';
 import type { Event } from '../../services/events';
 
@@ -12,7 +11,8 @@ const MyEvents: React.FC = () => {
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [titleSearch, setTitleSearch] = useState('');
+  const [locationSearch, setLocationSearch] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'public' | 'private' | 'upcoming' | 'past'>('all');
 
   const loadMyEvents = async () => {
@@ -33,16 +33,22 @@ const MyEvents: React.FC = () => {
     loadMyEvents();
   }, []);
 
-  // Filter events based on search term and filter type
-  useEffect(() => {
+  // Filter events based on search terms and filter type
+  const applyFilters = () => {
     let filtered = events;
 
-    // Filter by search term
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
+    // Filter by title search
+    if (titleSearch.trim()) {
+      const term = titleSearch.toLowerCase();
       filtered = filtered.filter(event =>
-        event.title.toLowerCase().includes(term) ||
-        event.description?.toLowerCase().includes(term) ||
+        event.title.toLowerCase().includes(term)
+      );
+    }
+
+    // Filter by location search
+    if (locationSearch.trim()) {
+      const term = locationSearch.toLowerCase();
+      filtered = filtered.filter(event =>
         event.location.toLowerCase().includes(term)
       );
     }
@@ -67,7 +73,12 @@ const MyEvents: React.FC = () => {
     }
 
     setFilteredEvents(filtered);
-  }, [events, searchTerm, filterType]);
+  };
+
+  // Apply filters when filter type changes
+  useEffect(() => {
+    applyFilters();
+  }, [events, filterType]);
 
   const handleCreateEvent = () => {
     navigate('/events/create');
@@ -199,20 +210,50 @@ const MyEvents: React.FC = () => {
         {/* Search and Filter Controls */}
         {!loading && events.length > 0 && (
           <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              {/* Search Input */}
-              <div className="flex-1">
-                <CustomInput
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Title Search */}
+              <div className="space-y-2">
+                <CustomFormField
                   type="text"
-                  placeholder="Search your events..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full"
+                  name="titleSearch"
+                  label="Search by Title"
+                  placeholder="Event title..."
+                  value={titleSearch}
+                  onChange={(e) => setTitleSearch(e.target.value)}
                 />
+                <CustomButton
+                  variant="secondary"
+                  onClick={applyFilters}
+                  className="w-full"
+                >
+                  Filter by Title
+                </CustomButton>
               </div>
 
-              {/* Filter Dropdown */}
-              <div className="sm:w-48">
+              {/* Location Search */}
+              <div className="space-y-2">
+                <CustomFormField
+                  type="text"
+                  name="locationSearch"
+                  label="Search by Location"
+                  placeholder="Event location..."
+                  value={locationSearch}
+                  onChange={(e) => setLocationSearch(e.target.value)}
+                />
+                <CustomButton
+                  variant="secondary"
+                  onClick={applyFilters}
+                  className="w-full"
+                >
+                  Filter by Location
+                </CustomButton>
+              </div>
+
+              {/* Event Type Filter */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Event Type
+                </label>
                 <select
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value as any)}
@@ -225,14 +266,35 @@ const MyEvents: React.FC = () => {
                   <option value="private">Private Events</option>
                 </select>
               </div>
+
+              {/* Clear Filters */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Actions
+                </label>
+                <CustomButton
+                  variant="danger"
+                  onClick={() => {
+                    setTitleSearch('');
+                    setLocationSearch('');
+                    setFilterType('all');
+                    setFilteredEvents(events);
+                  }}
+                  className="w-full"
+                >
+                  Clear All Filters
+                </CustomButton>
+              </div>
             </div>
 
             {/* Results Summary */}
-            <div className="mt-3 text-sm text-gray-600">
-              {searchTerm || filterType !== 'all' ? (
+            <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
+              {titleSearch || locationSearch || filterType !== 'all' ? (
                 <span>
                   Showing {filteredEvents.length} of {events.length} events
-                  {searchTerm && ` matching "${searchTerm}"`}
+                  {titleSearch && ` with title "${titleSearch}"`}
+                  {locationSearch && ` at location "${locationSearch}"`}
+                  {filterType !== 'all' && ` (${filterType} events)`}
                 </span>
               ) : (
                 <span>Showing {events.length} events</span>
