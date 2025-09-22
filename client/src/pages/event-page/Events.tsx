@@ -13,18 +13,28 @@ const Events: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchInput, setSearchInput] = useState(''); // Input field value
+  const [searchTerm, setSearchTerm] = useState(''); // Applied search filter
   const [hasMoreEvents, setHasMoreEvents] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
   const loadEvents = async (page: number = 1, search: string = '') => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      setEvents([]);
+      setError(null);
+      return;
+    }
+
     try {
       setLoading(true);
+      setError(null); 
+      
       const response = await eventService.getAllEvents({ 
         page, 
         limit: 10, 
         search: search || undefined,
-        event_type: 'public' // Only show public events
+        event_type: 'public'
       });
       
       if (page === 1) {
@@ -45,10 +55,20 @@ const Events: React.FC = () => {
 
   useEffect(() => {
     loadEvents(1, searchTerm);
-  }, [searchTerm]);
+  }, [isAuthenticated]); // Remove searchTerm from dependencies for manual filtering
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(e.target.value);
+  };
+
+  const handleFilter = () => {
+    setSearchTerm(searchInput);
+    setCurrentPage(1);
+  };
+
+  const handleClearFilter = () => {
+    setSearchInput('');
+    setSearchTerm('');
     setCurrentPage(1);
   };
 
@@ -115,14 +135,39 @@ const Events: React.FC = () => {
 
         {/* Search Bar */}
         <div className="mb-8">
-          <div className="max-w-md">
-            <CustomInput
-              type="text"
-              placeholder="Search events by title, description, or location..."
-              value={searchTerm}
-              onChange={handleSearch}
-              className="w-full"
-            />
+          <div className="max-w-2xl">
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <CustomInput
+                  type="text"
+                  placeholder="Search events by title, description, or location..."
+                  value={searchInput}
+                  onChange={handleSearchInputChange}
+                  className="w-full"
+                />
+              </div>
+              <CustomButton
+                variant="primary"
+                onClick={handleFilter}
+                disabled={loading}
+              >
+                Filter
+              </CustomButton>
+              {searchTerm && (
+                <CustomButton
+                  variant="secondary"
+                  onClick={handleClearFilter}
+                  disabled={loading}
+                >
+                  Clear
+                </CustomButton>
+              )}
+            </div>
+            {searchTerm && (
+              <div className="mt-2 text-sm text-gray-600">
+                Filtering by: "{searchTerm}"
+              </div>
+            )}
           </div>
         </div>
 
@@ -133,31 +178,43 @@ const Events: React.FC = () => {
           </div>
         )}
 
-        {/* Loading State */}
-        {loading && events.length === 0 && (
-          <div className="space-y-4">
-            {[...Array(3)].map((_, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md p-6 animate-pulse">
-                <div className="h-6 bg-gray-200 rounded mb-4 w-3/4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded mb-4 w-1/2"></div>
-                <div className="h-8 bg-gray-200 rounded w-24"></div>
-              </div>
-            ))}
-          </div>
-        )}
 
         {/* Events List */}
         {!loading || events.length > 0 ? (
           <>
             {events.length === 0 ? (
               <div className="text-center py-12">
-                <div className="text-gray-500 text-lg mb-2">
-                  {searchTerm ? 'No events match your search' : 'No public events found'}
-                </div>
-                <div className="text-gray-400">
-                  {searchTerm ? 'Try adjusting your search terms' : 'Check back later for new events'}
-                </div>
+                {!isAuthenticated ? (
+                  <div>
+                    <div className="text-gray-500 text-lg mb-2">
+                      Sign in to browse events
+                    </div>
+                    <div className="text-gray-400 mb-4">
+                      Join our community to discover and create amazing events
+                    </div>
+                    <div className="flex gap-3 justify-center">
+                      <Link to="/auth/login">
+                        <CustomButton variant="primary">
+                          Sign In
+                        </CustomButton>
+                      </Link>
+                      <Link to="/auth/signup">
+                        <CustomButton variant="secondary">
+                          Sign Up
+                        </CustomButton>
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="text-gray-500 text-lg mb-2">
+                      {searchTerm ? 'No events match your search' : 'No public events found'}
+                    </div>
+                    <div className="text-gray-400">
+                      {searchTerm ? 'Try adjusting your search terms' : 'Check back later for new events'}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-6">
