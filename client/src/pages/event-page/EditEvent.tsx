@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header, Footer } from '../../components';
-import CustomFormField from '../../components/CustomFormField';
-import CustomButton from '../../components/CustomButton';
+import { CustomForm, CustomFormField, CustomButton } from '../../components';
 import { eventService } from '../../services/events';
 import type { Event, UpdateEventData } from '../../services/events';
 
@@ -224,7 +223,10 @@ const EditEvent: React.FC = () => {
 
         {/* Event Form */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <CustomForm
+            title="Edit Event"
+            onSubmit={handleSubmit}
+          >
             {/* Event Title */}
             <CustomFormField
               type="text"
@@ -320,7 +322,7 @@ const EditEvent: React.FC = () => {
                 Cancel
               </CustomButton>
             </div>
-          </form>
+          </CustomForm>
         </div>
       </div>
       

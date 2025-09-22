@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header, Footer } from '../../components';
-import CustomFormField from '../../components/CustomFormField';
-import CustomButton from '../../components/CustomButton';
+import { CustomForm, CustomFormField, CustomButton } from '../../components';
 import { eventService } from '../../services/events';
 import type { CreateEventData } from '../../services/events';
 
@@ -25,7 +24,6 @@ const CreateEvent: React.FC = () => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -67,7 +65,6 @@ const CreateEvent: React.FC = () => {
     setError(null);
 
     try {
-      // Convert datetime-local to ISO string
       const eventData: CreateEventData = {
         title: formData.title.trim(),
         event_date: new Date(formData.event_date).toISOString(),
@@ -77,7 +74,7 @@ const CreateEvent: React.FC = () => {
       };
 
       await eventService.createEvent(eventData);
-      navigate('/events/my'); // Redirect to my events after creation
+      navigate('/events/my');
     } catch (err: any) {
       console.error('Error creating event:', err);
       setError(err.message || 'Failed to create event. Please try again.');
@@ -87,7 +84,7 @@ const CreateEvent: React.FC = () => {
   };
 
   const handleCancel = () => {
-    navigate(-1); // Go back to previous page
+    navigate(-1); 
   };
 
   return (
@@ -129,8 +126,11 @@ const CreateEvent: React.FC = () => {
 
         {/* Event Form */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Event Title */}
+          <CustomForm
+            title="Create New Event"
+            onSubmit={handleSubmit}
+          >
+
             <CustomFormField
               type="text"
               name="title"
@@ -204,7 +204,6 @@ const CreateEvent: React.FC = () => {
               )}
             </div>
 
-            {/* Form Actions */}
             <div className="flex gap-4 pt-4">
               <CustomButton
                 type="submit"
@@ -225,7 +224,7 @@ const CreateEvent: React.FC = () => {
                 Cancel
               </CustomButton>
             </div>
-          </form>
+          </CustomForm>
         </div>
       </div>
       
