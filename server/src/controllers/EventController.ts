@@ -18,7 +18,7 @@ export class EventController {
 
   async create(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { title, description, event_date, location, event_type } = req.body;
+      const { title, description, event_date, location, event_type, category_id, tag_ids } = req.body;
 
       if (!title || !event_date || !location) {
         res.status(400).json({ 
@@ -47,6 +47,20 @@ export class EventController {
         return;
       }
 
+      if (category_id && (!Number.isInteger(category_id) || category_id <= 0)) {
+        res.status(400).json({ 
+          error: 'Category ID must be a positive integer' 
+        });
+        return;
+      }
+
+      if (tag_ids && (!Array.isArray(tag_ids) || !tag_ids.every(id => Number.isInteger(id) && id > 0))) {
+        res.status(400).json({ 
+          error: 'Tag IDs must be an array of positive integers' 
+        });
+        return;
+      }
+
       const eventData: CreateEventData = {
         title: title.trim(),
         description: description?.trim(),
@@ -54,6 +68,8 @@ export class EventController {
         location: location.trim(),
         event_type: event_type || 'public',
         created_by: req.user.id,
+        category_id: category_id || undefined,
+        tag_ids: tag_ids || [],
       };
 
       const event = await this.eventModel.create(eventData);
@@ -74,6 +90,8 @@ export class EventController {
         event_type,
         search,
         upcoming,
+        category_id,
+        tag_ids,
         page = 1,
         limit = 20,
       } = req.query;
@@ -90,6 +108,28 @@ export class EventController {
       
       if (upcoming === 'true') {
         filters.upcoming = true;
+      }
+
+      if (category_id) {
+        const categoryIdNum = parseInt(category_id as string, 10);
+        if (!isNaN(categoryIdNum)) {
+          filters.category_id = categoryIdNum;
+        }
+      }
+
+      if (tag_ids) {
+        try {
+          const tagIdsArray = Array.isArray(tag_ids) ? tag_ids : [tag_ids];
+          const tagIdsNumbers = tagIdsArray
+            .map(id => parseInt(id as string, 10))
+            .filter(id => !isNaN(id));
+          
+          if (tagIdsNumbers.length > 0) {
+            filters.tag_ids = tagIdsNumbers;
+          }
+        } catch (error) {
+          // Ignore invalid tag_ids
+        }
       }
 
       const pageNum = parseInt(page as string, 10);
@@ -159,18 +199,68 @@ export class EventController {
         return;
       }
 
-      const { page = 1, limit = 20 } = req.query;
+      const {
+        search,
+        upcoming,
+        category_id,
+        tag_ids,
+        page = 1,
+        limit = 20,
+      } = req.query;
+
+      const filters: EventFilters = {};
+      filters.user_id = req.user.id; // Only get events for the authenticated user
+      
+      if (search) {
+        filters.search = search as string;
+      }
+      
+      if (upcoming === 'true') {
+        filters.upcoming = true;
+      }
+
+      if (category_id) {
+        const categoryIdNum = parseInt(category_id as string, 10);
+        if (!isNaN(categoryIdNum)) {
+          filters.category_id = categoryIdNum;
+        }
+      }
+
+      if (tag_ids) {
+        try {
+          const tagIdsArray = Array.isArray(tag_ids) ? tag_ids : [tag_ids];
+          const tagIdsNumbers = tagIdsArray
+            .map(id => parseInt(id as string, 10))
+            .filter(id => !isNaN(id));
+          
+          if (tagIdsNumbers.length > 0) {
+            filters.tag_ids = tagIdsNumbers;
+          }
+        } catch (error) {
+          // Ignore invalid tag_ids
+        }
+      }
+
       const pageNum = parseInt(page as string, 10);
       const limitNum = parseInt(limit as string, 10);
       const offset = (pageNum - 1) * limitNum;
 
-      const events = await this.eventModel.findByUserId(
-        req.user.id, 
-        limitNum, 
-        offset
-      );
+      const [events, totalCount] = await Promise.all([
+        this.eventModel.findAll(filters, limitNum, offset),
+        this.eventModel.getEventCount(filters),
+      ]);
 
-      res.json({ events });
+      const totalPages = Math.ceil(totalCount / limitNum);
+
+      res.json({
+        events,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: totalCount,
+          totalPages,
+        },
+      });
     } catch (error) {
       console.error('Get user events error:', error);
       res.status(500).json({ error: 'Internal server error' });
@@ -213,7 +303,7 @@ export class EventController {
         return;
       }
 
-      const { title, description, event_date, location, event_type } = req.body;
+      const { title, description, event_date, location, event_type, category_id, tag_ids } = req.body;
       const updateData: UpdateEventData = {};
 
       // Build update data with validation
@@ -256,6 +346,41 @@ export class EventController {
           return;
         }
         updateData.event_type = event_type;
+      }
+
+      // Handle category_id update
+      if (category_id !== undefined) {
+        if (category_id === null || category_id === '') {
+          updateData.category_id = null;
+        } else {
+          const categoryIdNum = parseInt(category_id as string, 10);
+          if (isNaN(categoryIdNum) || categoryIdNum <= 0) {
+            res.status(400).json({ 
+              error: 'Category ID must be a positive integer or null' 
+            });
+            return;
+          }
+          updateData.category_id = categoryIdNum;
+        }
+      }
+
+      // Handle tag_ids update
+      if (tag_ids !== undefined) {
+        if (!Array.isArray(tag_ids)) {
+          res.status(400).json({ 
+            error: 'Tag IDs must be an array' 
+          });
+          return;
+        }
+        
+        if (tag_ids.length > 0 && !tag_ids.every(id => Number.isInteger(id) && id > 0)) {
+          res.status(400).json({ 
+            error: 'All tag IDs must be positive integers' 
+          });
+          return;
+        }
+        
+        updateData.tag_ids = tag_ids;
       }
 
       const updatedEvent = await this.eventModel.update(eventId, updateData);

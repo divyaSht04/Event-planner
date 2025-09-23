@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header, Footer } from '../../components';
 import { CustomForm, CustomFormField, CustomButton } from '../../components';
-import { eventService } from '../../services/events';
-import type { Event, UpdateEventData } from '../../services/events';
+import { eventService, tagService, categoryService } from '../../services';
+import type { Event, UpdateEventData, Category, Tag } from '../../services/events';
 
 const EditEvent: React.FC = () => {
   const navigate = useNavigate();
@@ -13,18 +13,26 @@ const EditEvent: React.FC = () => {
   const [isLoadingEvent, setIsLoadingEvent] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Categories and tags state
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [isLoadingTags, setIsLoadingTags] = useState(true);
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     event_date: '',
     location: '',
     event_type: 'public' as 'public' | 'private',
+    category_id: '',
+    tag_ids: [] as number[],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const loadEvent = async () => {
+    const loadEventAndData = async () => {
       if (!id) {
         setError('Event ID is required');
         setIsLoadingEvent(false);
@@ -32,9 +40,17 @@ const EditEvent: React.FC = () => {
       }
 
       try {
-        const eventData = await eventService.getEventById(parseInt(id));
+        // Load event, categories, and tags in parallel
+        const [eventData, categoriesData, tagsData] = await Promise.all([
+          eventService.getEventById(parseInt(id)),
+          categoryService.getAllCategories(),
+          tagService.getAllTags()
+        ]);
+
         setEvent(eventData);
-        
+        setCategories(categoriesData);
+        setTags(tagsData);
+
         // Pre-populate form with event data
         setFormData({
           title: eventData.title || '',
@@ -42,16 +58,20 @@ const EditEvent: React.FC = () => {
           event_date: eventData.event_date ? new Date(eventData.event_date).toISOString().slice(0, 16) : '',
           location: eventData.location || '',
           event_type: eventData.event_type || 'public',
+          category_id: eventData.category_id?.toString() || '',
+          tag_ids: eventData.tags?.map(tag => tag.id) || [],
         });
       } catch (err: any) {
         console.error('Error loading event:', err);
         setError(err.message || 'Event not found');
       } finally {
         setIsLoadingEvent(false);
+        setIsLoadingCategories(false);
+        setIsLoadingTags(false);
       }
     };
 
-    loadEvent();
+    loadEventAndData();
   }, [id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -61,6 +81,28 @@ const EditEvent: React.FC = () => {
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { value } = e.target;
+    setFormData(prev => ({ ...prev, category_id: value }));
+
+    if (errors.category_id) {
+      setErrors(prev => ({ ...prev, category_id: '' }));
+    }
+  };
+
+  const handleTagChange = (tagId: number, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      tag_ids: checked
+        ? [...prev.tag_ids, tagId]
+        : prev.tag_ids.filter(id => id !== tagId)
+    }));
+
+    if (errors.tag_ids) {
+      setErrors(prev => ({ ...prev, tag_ids: '' }));
     }
   };
 
@@ -107,6 +149,8 @@ const EditEvent: React.FC = () => {
         location: formData.location.trim(),
         event_type: formData.event_type,
         description: formData.description.trim() || undefined,
+        category_id: formData.category_id ? parseInt(formData.category_id) : null,
+        tag_ids: formData.tag_ids.length > 0 ? formData.tag_ids : undefined,
       };
 
       await eventService.updateEvent(event.id!, updateData);
@@ -299,6 +343,63 @@ const EditEvent: React.FC = () => {
               {errors.event_type && (
                 <p className="text-red-500 text-sm mt-1">{errors.event_type}</p>
               )}
+            </div>
+
+            {/* Event Category */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Category
+              </label>
+              <select
+                name="category_id"
+                value={formData.category_id}
+                onChange={handleCategoryChange}
+                disabled={isLoading || isLoadingCategories}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+              >
+                <option value="">Select a category (optional)</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+              {isLoadingCategories && (
+                <p className="text-gray-500 text-sm mt-1">Loading categories...</p>
+              )}
+              {errors.category_id && (
+                <p className="text-red-500 text-sm mt-1">{errors.category_id}</p>
+              )}
+              <p className="text-gray-500 text-sm">Categorize your event to help others find it</p>
+            </div>
+
+            {/* Event Tags */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Tags
+              </label>
+              {isLoadingTags ? (
+                <p className="text-gray-500 text-sm">Loading tags...</p>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {tags.map((tag) => (
+                    <label key={tag.id} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.tag_ids.includes(tag.id)}
+                        onChange={(e) => handleTagChange(tag.id, e.target.checked)}
+                        disabled={isLoading}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">{tag.name}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+              {errors.tag_ids && (
+                <p className="text-red-500 text-sm mt-1">{errors.tag_ids}</p>
+              )}
+              <p className="text-gray-500 text-sm">Select tags that describe your event</p>
             </div>
 
             {/* Form Actions */}

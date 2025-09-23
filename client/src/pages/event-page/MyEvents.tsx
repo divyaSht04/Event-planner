@@ -3,24 +3,51 @@ import { useNavigate } from 'react-router-dom';
 import { Header, Footer } from '../../components';
 import { CustomButton, CustomFormField } from '../../components';
 import { eventService } from '../../services/events';
-import type { Event } from '../../services/events';
+import tagService from '../../services/tags';
+import categoryService from '../../services/categories';
+import type { Event, Tag, Category } from '../../services/events';
 
 const MyEvents: React.FC = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [titleSearch, setTitleSearch] = useState('');
   const [locationSearch, setLocationSearch] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'public' | 'private' | 'upcoming' | 'past'>('all');
+  
+  // Category and tag filtering state
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
 
   const loadMyEvents = async () => {
     try {
       setLoading(true);
-      const response = await eventService.getMyEvents();
+      setError(null);
+      
+      // Combine title and location searches into one search term
+      const searchTerms = [titleSearch, locationSearch].filter(term => term.trim()).join(' ');
+      
+      // Build filters object
+      const filters: any = {
+        search: searchTerms || undefined,
+        category_id: selectedCategoryId || undefined,
+        tag_ids: selectedTagIds.length > 0 ? selectedTagIds : undefined
+      };
+      
+      // Add event type filter
+      if (filterType === 'public') {
+        filters.event_type = 'public';
+      } else if (filterType === 'private') {
+        filters.event_type = 'private';
+      } else if (filterType === 'upcoming') {
+        filters.upcoming = true;
+      }
+      
+      const response = await eventService.getMyEvents(filters);
       setEvents(response.events);
-      setFilteredEvents(response.events);
     } catch (err: any) {
       console.error('Error loading my events:', err);
       setError('Failed to load your events. Please try again.');
@@ -31,54 +58,24 @@ const MyEvents: React.FC = () => {
 
   useEffect(() => {
     loadMyEvents();
-  }, []);
+  }, [titleSearch, locationSearch, filterType, selectedCategoryId, selectedTagIds]);
 
-  // Filter events based on search terms and filter type
-  const applyFilters = () => {
-    let filtered = events;
-
-    // Filter by title search
-    if (titleSearch.trim()) {
-      const term = titleSearch.toLowerCase();
-      filtered = filtered.filter(event =>
-        event.title.toLowerCase().includes(term)
-      );
+  const loadCategoriesAndTags = async () => {
+    try {
+      const [categoriesResponse, tagsResponse] = await Promise.all([
+        categoryService.getAllCategories(),
+        tagService.getAllTags()
+      ]);
+      setCategories(categoriesResponse);
+      setTags(tagsResponse);
+    } catch (err) {
+      console.error('Error loading categories and tags:', err);
     }
-
-    // Filter by location search
-    if (locationSearch.trim()) {
-      const term = locationSearch.toLowerCase();
-      filtered = filtered.filter(event =>
-        event.location.toLowerCase().includes(term)
-      );
-    }
-
-    // Filter by type
-    const now = new Date();
-    switch (filterType) {
-      case 'public':
-        filtered = filtered.filter(event => event.event_type === 'public');
-        break;
-      case 'private':
-        filtered = filtered.filter(event => event.event_type === 'private');
-        break;
-      case 'upcoming':
-        filtered = filtered.filter(event => new Date(event.event_date) > now);
-        break;
-      case 'past':
-        filtered = filtered.filter(event => new Date(event.event_date) <= now);
-        break;
-      default:
-        break;
-    }
-
-    setFilteredEvents(filtered);
   };
 
-  // Apply filters when filter type changes
   useEffect(() => {
-    applyFilters();
-  }, [events, filterType]);
+    loadCategoriesAndTags();
+  }, []);
 
   const handleCreateEvent = () => {
     navigate('/events/create');
@@ -223,7 +220,7 @@ const MyEvents: React.FC = () => {
                 />
                 <CustomButton
                   variant="secondary"
-                  onClick={applyFilters}
+                  onClick={loadMyEvents}
                   className="w-full"
                 >
                   Filter by Title
@@ -242,7 +239,7 @@ const MyEvents: React.FC = () => {
                 />
                 <CustomButton
                   variant="secondary"
-                  onClick={applyFilters}
+                  onClick={loadMyEvents}
                   className="w-full"
                 >
                   Filter by Location
@@ -278,7 +275,9 @@ const MyEvents: React.FC = () => {
                     setTitleSearch('');
                     setLocationSearch('');
                     setFilterType('all');
-                    setFilteredEvents(events);
+                    setSelectedCategoryId(null);
+                    setSelectedTagIds([]);
+                    loadMyEvents();
                   }}
                   className="w-full"
                 >
@@ -287,11 +286,59 @@ const MyEvents: React.FC = () => {
               </div>
             </div>
 
+            {/* Category and Tag Filters */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              {/* Category Filter */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Filter by Category
+                </label>
+                <select
+                  value={selectedCategoryId || ''}
+                  onChange={(e) => setSelectedCategoryId(e.target.value ? parseInt(e.target.value) : null)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">All Categories</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Tags Filter */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Filter by Tags
+                </label>
+                <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                  {tags.map((tag) => (
+                    <label key={tag.id} className="flex items-center text-sm">
+                      <input
+                        type="checkbox"
+                        checked={selectedTagIds.includes(tag.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedTagIds(prev => [...prev, tag.id]);
+                          } else {
+                            setSelectedTagIds(prev => prev.filter(id => id !== tag.id));
+                          }
+                        }}
+                        className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      {tag.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
             {/* Results Summary */}
             <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
               {titleSearch || locationSearch || filterType !== 'all' ? (
                 <span>
-                  Showing {filteredEvents.length} of {events.length} events
+                  Showing {events.length} events
                   {titleSearch && ` with title "${titleSearch}"`}
                   {locationSearch && ` at location "${locationSearch}"`}
                   {filterType !== 'all' && ` (${filterType} events)`}
@@ -323,7 +370,7 @@ const MyEvents: React.FC = () => {
         {/* Events List */}
         {!loading && (
           <>
-            {filteredEvents.length === 0 ? (
+            {events.length === 0 ? (
               <div className="text-center py-12">
                 {events.length === 0 ? (
                   <div>
@@ -351,7 +398,7 @@ const MyEvents: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredEvents.map((event) => {
+                {events.map((event) => {
                   const { date, time, isUpcoming } = formatEventDate(event.event_date);
                   return (
                     <div 
