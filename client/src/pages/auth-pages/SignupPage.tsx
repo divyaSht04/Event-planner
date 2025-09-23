@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { CustomForm, CustomFormField, CustomButton } from '../../components';
 import { useAuth } from '../../context';
 
@@ -80,11 +81,11 @@ const SignupPage: React.FC = () => {
         phone_number: formData.phoneNumber,
         password: formData.password
       });
-      // Navigate to home after successful registration
+      toast.success('Account created successfully! Welcome to Event Planner.');
       navigate('/');
     } catch (error) {
       console.error('Signup error:', error);
-      // Error is already handled by the auth context
+      toast.error('Failed to create account. Please try again.');
     }
   };
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { CustomForm, CustomFormField, CustomButton } from '../../components';
 import { useAuth } from '../../context';
 
@@ -55,9 +56,11 @@ const LoginPage: React.FC = () => {
     
     try {
       await login(formData.email, formData.password);
+      toast.success('Welcome back! Successfully signed in.');
       navigate(from, { replace: true });
     } catch (error) {
       console.error('Login error:', error);
+      toast.error('Failed to sign in. Please check your credentials.');
     }
   };
 
@@ -105,23 +108,6 @@ const LoginPage: React.FC = () => {
               error={errors.password}
               required
             />
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                  Remember me
-                </label>
-              </div>
-              <Link to="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-500">
-                Forgot password?
-              </Link>
-            </div>
 
             <CustomButton
               type="submit"

@@ -21,7 +21,6 @@ class EventService {
     }
   }
 
-
   async getAllEvents(filters: EventFilters = {}): Promise<EventListResponse> {
     try {
       const params = new URLSearchParams();
@@ -31,6 +30,12 @@ class EventService {
       if (filters.event_type) params.append('event_type', filters.event_type);
       if (filters.search) params.append('search', filters.search);
       if (filters.upcoming) params.append('upcoming', 'true');
+      if (filters.category_id) params.append('category_id', filters.category_id.toString());
+      if (filters.tag_ids && filters.tag_ids.length > 0) {
+        filters.tag_ids.forEach(id => params.append('tag_ids', id.toString()));
+      }
+      if (filters.date_start) params.append('date_start', filters.date_start);
+      if (filters.date_end) params.append('date_end', filters.date_end);
 
       const queryString = params.toString();
       const url = queryString ? `/events?${queryString}` : '/events';
@@ -43,19 +48,21 @@ class EventService {
     }
   }
 
-
   async getMyEvents(filters: EventFilters = {}): Promise<EventListResponse> {
     try {
       const params = new URLSearchParams();
       
       if (filters.page) params.append('page', filters.page.toString());
       if (filters.limit) params.append('limit', filters.limit.toString());
+      if (filters.event_type) params.append('event_type', filters.event_type);
       if (filters.search) params.append('search', filters.search);
       if (filters.upcoming) params.append('upcoming', 'true');
       if (filters.category_id) params.append('category_id', filters.category_id.toString());
       if (filters.tag_ids && filters.tag_ids.length > 0) {
         filters.tag_ids.forEach(id => params.append('tag_ids', id.toString()));
       }
+      if (filters.date_start) params.append('date_start', filters.date_start);
+      if (filters.date_end) params.append('date_end', filters.date_end);
 
       const queryString = params.toString();
       const url = queryString ? `/events/my-events?${queryString}` : '/events/my-events';
@@ -68,7 +75,6 @@ class EventService {
     }
   }
 
-
   async getEventById(eventId: number): Promise<Event> {
     try {
       const response = await api.get<{ event: Event }>(`/events/${eventId}`);
@@ -78,7 +84,6 @@ class EventService {
       throw new Error(error.response?.data?.error || 'Failed to fetch event');
     }
   }
-
 
   async updateEvent(eventId: number, updateData: UpdateEventData): Promise<EventResponse> {
     try {
@@ -100,7 +105,6 @@ class EventService {
     }
   }
 
-
   async getUpcomingEvents(limit: number = 10): Promise<EventListResponse> {
     try {
       const response = await api.get<EventListResponse>(`/events/upcoming?limit=${limit}`);
@@ -110,7 +114,6 @@ class EventService {
       throw new Error(error.response?.data?.error || 'Failed to fetch upcoming events');
     }
   }
-
 
   async getPastEvents(limit: number = 10): Promise<EventListResponse> {
     try {
@@ -122,7 +125,6 @@ class EventService {
     }
   }
 
-
   async searchEvents(searchTerm: string, filters: Omit<EventFilters, 'search'> = {}): Promise<EventListResponse> {
     try {
       return await this.getAllEvents({ ...filters, search: searchTerm });
@@ -131,7 +133,6 @@ class EventService {
       throw new Error(error.response?.data?.error || 'Failed to search events');
     }
   }
-
 
   async getEventsByType(eventType: 'public' | 'private', filters: Omit<EventFilters, 'event_type'> = {}): Promise<EventListResponse> {
     try {

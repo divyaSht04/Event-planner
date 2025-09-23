@@ -2,18 +2,16 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/auth';
 import type { AuthContextType, AuthState, User, RegisterRequest } from '../services';
 
-// Create the context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Initial state
 const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
-  isLoading: true, // Start with loading true to check existing auth
+  isLoading: true, 
   error: null,
 };
 
-// AuthProvider component
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AuthState>(initialState);
 
@@ -34,7 +32,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  // Login function
   const login = async (email: string, password: string): Promise<void> => {
     try {
       updateState({ isLoading: true, error: null });
@@ -73,7 +70,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Logout function
   const logout = async (): Promise<void> => {
     try {
       await authService.logout();
@@ -84,7 +80,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Refresh token function
   const refreshToken = async (): Promise<void> => {
     try {
       const response = await authService.refreshToken();
@@ -96,7 +91,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Check authentication status on app load
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {

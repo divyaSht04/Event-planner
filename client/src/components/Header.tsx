@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { CustomButton } from './index';
-import { useAuth } from '../context';
+import React, { useState } from "react";
+import { Link, redirect } from "react-router-dom";
+import toast from "react-hot-toast";
+import { CustomButton } from "./index";
+import { useAuth } from "../context";
 
 interface HeaderProps {
   showAuthButtons?: boolean;
   className?: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ 
-  showAuthButtons = true, 
-  className = '' 
+const Header: React.FC<HeaderProps> = ({
+  showAuthButtons = true,
+  className = "",
 }) => {
   const { user, isAuthenticated, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -18,8 +19,11 @@ const Header: React.FC<HeaderProps> = ({
   const handleLogout = async () => {
     try {
       await logout();
+      toast.success("Successfully signed out. See you later!");
+      redirect("/signup");
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
+      toast.error("Error signing out. Please try again.");
     }
   };
 
@@ -29,27 +33,28 @@ const Header: React.FC<HeaderProps> = ({
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-8">
             <Link to="/" className="flex items-center">
-              <h1 className="text-2xl font-bold text-indigo-600">Event Planner</h1>
+              <h1 className="text-2xl font-bold text-indigo-600">
+                Event Planner
+              </h1>
             </Link>
-            
-            {/* Navigation Links */}
+
             <div className="hidden md:flex space-x-6">
-              <Link 
-                to="/events" 
-                className="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium transition-colors"
-              >
-                Browse Events
-              </Link>
               {isAuthenticated && (
                 <>
-                  <Link 
-                    to="/events/my" 
+                  <Link
+                    to="/events"
+                    className="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium transition-colors"
+                  >
+                    Browse Events
+                  </Link>
+                  <Link
+                    to="/events/my"
                     className="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium transition-colors"
                   >
                     My Events
                   </Link>
-                  <Link 
-                    to="/events/create" 
+                  <Link
+                    to="/events/create"
                     className="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium transition-colors"
                   >
                     Create Event
@@ -58,8 +63,7 @@ const Header: React.FC<HeaderProps> = ({
               )}
             </div>
           </div>
-          
-          {/* Show auth buttons for non-authenticated users */}
+
           {showAuthButtons && !isAuthenticated && (
             <div className="flex space-x-4">
               <Link to="/auth/login">
@@ -86,8 +90,18 @@ const Header: React.FC<HeaderProps> = ({
                   {user.name.charAt(0).toUpperCase()}
                 </div>
                 <span className="text-sm font-medium">{user.name}</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
 
