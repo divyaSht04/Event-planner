@@ -44,9 +44,23 @@ class EventService {
   }
 
 
-  async getMyEvents(page: number = 1, limit: number = 20): Promise<EventListResponse> {
+  async getMyEvents(filters: EventFilters = {}): Promise<EventListResponse> {
     try {
-      const response = await api.get<EventListResponse>(`/events/my-events?page=${page}&limit=${limit}`);
+      const params = new URLSearchParams();
+      
+      if (filters.page) params.append('page', filters.page.toString());
+      if (filters.limit) params.append('limit', filters.limit.toString());
+      if (filters.search) params.append('search', filters.search);
+      if (filters.upcoming) params.append('upcoming', 'true');
+      if (filters.category_id) params.append('category_id', filters.category_id.toString());
+      if (filters.tag_ids && filters.tag_ids.length > 0) {
+        filters.tag_ids.forEach(id => params.append('tag_ids', id.toString()));
+      }
+
+      const queryString = params.toString();
+      const url = queryString ? `/events/my-events?${queryString}` : '/events/my-events';
+      
+      const response = await api.get<EventListResponse>(url);
       return response.data;
     } catch (error: any) {
       console.error('Get my events error:', error.response?.data || error.message);

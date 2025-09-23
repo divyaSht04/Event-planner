@@ -6,5 +6,7 @@ export type {
   EventFilters,
   EventListResponse,
   EventResponse,
-  EventDeleteResponse
+  EventDeleteResponse,
+  Tag,
+  Category
 } from './types';

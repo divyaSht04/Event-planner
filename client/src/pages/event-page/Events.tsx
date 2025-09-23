@@ -3,8 +3,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Header, Footer } from '../../components';
 import { CustomFormField, CustomButton } from '../../components';
 import { eventService } from '../../services/events';
+import tagService from '../../services/tags';
+import categoryService from '../../services/categories';
 import { useAuth } from '../../context';
-import type { Event } from '../../services/events';
+import type { Event, Tag, Category } from '../../services/events';
 
 const Events: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +18,12 @@ const Events: React.FC = () => {
   const [locationSearch, setLocationSearch] = useState('');
   const [hasMoreEvents, setHasMoreEvents] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  
+  // Category and tag filtering state
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
 
   const loadEvents = async (page: number = 1, titleFilter: string = '', locationFilter: string = '') => {
     if (!isAuthenticated) {
@@ -36,7 +44,9 @@ const Events: React.FC = () => {
         page, 
         limit: 10, 
         search: searchTerms || undefined,
-        event_type: 'public'
+        event_type: 'public',
+        category_id: selectedCategoryId || undefined,
+        tag_ids: selectedTagIds.length > 0 ? selectedTagIds : undefined
       });
       
       if (page === 1) {
@@ -57,6 +67,25 @@ const Events: React.FC = () => {
 
   useEffect(() => {
     loadEvents(1, '', ''); // Load all events initially
+  }, [isAuthenticated, selectedCategoryId, selectedTagIds]);
+
+  const loadCategoriesAndTags = async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      const [categoriesResponse, tagsResponse] = await Promise.all([
+        categoryService.getAllCategories(),
+        tagService.getAllTags()
+      ]);
+      setCategories(categoriesResponse);
+      setTags(tagsResponse);
+    } catch (err) {
+      console.error('Error loading categories and tags:', err);
+    }
+  };
+
+  useEffect(() => {
+    loadCategoriesAndTags();
   }, [isAuthenticated]);
 
   const handleTitleFilter = () => {
@@ -70,7 +99,24 @@ const Events: React.FC = () => {
   const handleClearFilters = () => {
     setTitleSearch('');
     setLocationSearch('');
+    setSelectedCategoryId(null);
+    setSelectedTagIds([]);
     loadEvents(1, '', '');
+  };
+
+  const handleCategoryChange = (categoryId: number | null) => {
+    setSelectedCategoryId(categoryId);
+    loadEvents(1, titleSearch, locationSearch);
+  };
+
+  const handleTagChange = (tagId: number, checked: boolean) => {
+    if (checked) {
+      setSelectedTagIds(prev => [...prev, tagId]);
+    } else {
+      setSelectedTagIds(prev => prev.filter(id => id !== tagId));
+    }
+    // Reload events after a short delay to avoid too many API calls
+    setTimeout(() => loadEvents(1, titleSearch, locationSearch), 100);
   };
 
   const handleLoadMore = () => {
@@ -137,12 +183,12 @@ const Events: React.FC = () => {
         {/* Search and Filter Controls */}
         {isAuthenticated && (
           <div className="bg-white rounded-lg shadow-md p-4 mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Title Search */}
               <div className="space-y-2">
                 <CustomFormField
                   type="text"
-                  name="Text Search"
+                  name="titleSearch"
                   label="Search by Title and Description"
                   placeholder="Event title..."
                   value={titleSearch}
@@ -176,6 +222,25 @@ const Events: React.FC = () => {
                 </CustomButton>
               </div>
 
+              {/* Category Filter */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Filter by Category
+                </label>
+                <select
+                  value={selectedCategoryId || ''}
+                  onChange={(e) => handleCategoryChange(e.target.value ? parseInt(e.target.value) : null)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">All Categories</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Clear Filters */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
@@ -193,13 +258,37 @@ const Events: React.FC = () => {
               </div>
             </div>
 
+            {/* Tags Filter */}
+            {tags.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Filter by Tags
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((tag) => (
+                    <label key={tag.id} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedTagIds.includes(tag.id)}
+                        onChange={(e) => handleTagChange(tag.id, e.target.checked)}
+                        className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <span className="text-sm text-gray-700">{tag.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Results Summary */}
-            {(titleSearch || locationSearch) && (
+            {(titleSearch || locationSearch || selectedCategoryId || selectedTagIds.length > 0) && (
               <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
                 <span>
                   Filtering events
                   {titleSearch && ` with title "${titleSearch}"`}
                   {locationSearch && ` at location "${locationSearch}"`}
+                  {selectedCategoryId && ` in category "${categories.find(c => c.id === selectedCategoryId)?.name}"`}
+                  {selectedTagIds.length > 0 && ` with tags: ${selectedTagIds.map(id => tags.find(t => t.id === id)?.name).join(', ')}`}
                 </span>
               </div>
             )}
@@ -300,7 +389,29 @@ const Events: React.FC = () => {
                                 Organized by {event.creator_name}
                               </div>
                             )}
+                            {event.category_name && (
+                              <div className="flex items-center">
+                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                </svg>
+                                {event.category_name}
+                              </div>
+                            )}
                           </div>
+                          
+                          {/* Tags */}
+                          {event.tags && event.tags.length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-1">
+                              {event.tags.map((tag) => (
+                                <span
+                                  key={tag.id}
+                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                >
+                                  {tag.name}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                         
                         <div className="mt-4 sm:mt-0 sm:ml-6">
