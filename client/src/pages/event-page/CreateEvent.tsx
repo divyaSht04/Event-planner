@@ -27,7 +27,6 @@ const CreateEvent: React.FC = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Load categories and tags on component mount
   useEffect(() => {
     const loadCategoriesAndTags = async () => {
       try {

@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Header, Footer } from '../../components';
 import { CustomFormField, CustomButton } from '../../components';
 import { eventService } from '../../services/events';
 import tagService from '../../services/tags';
 import categoryService from '../../services/categories';
-import { useAuth } from '../../context';
 import type { Event, Tag, Category } from '../../services/events';
 
 const Events: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,18 +24,10 @@ const Events: React.FC = () => {
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
 
   const loadEvents = async (page: number = 1, titleFilter: string = '', locationFilter: string = '') => {
-    if (!isAuthenticated) {
-      setLoading(false);
-      setEvents([]);
-      setError(null);
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null); 
       
-      // Combine title and location searches into one search term
       const searchTerms = [titleFilter, locationFilter].filter(term => term.trim()).join(' ');
       
       const response = await eventService.getAllEvents({ 
@@ -66,12 +56,10 @@ const Events: React.FC = () => {
   };
 
   useEffect(() => {
-    loadEvents(1, '', ''); // Load all events initially
-  }, [isAuthenticated, selectedCategoryId, selectedTagIds]);
+    loadEvents(1, '', ''); 
+  }, [selectedCategoryId, selectedTagIds]);
 
   const loadCategoriesAndTags = async () => {
-    if (!isAuthenticated) return;
-    
     try {
       const [categoriesResponse, tagsResponse] = await Promise.all([
         categoryService.getAllCategories(),
@@ -86,7 +74,7 @@ const Events: React.FC = () => {
 
   useEffect(() => {
     loadCategoriesAndTags();
-  }, [isAuthenticated]);
+  }, []);
 
   const handleTitleFilter = () => {
     loadEvents(1, titleSearch, locationSearch);
@@ -115,8 +103,7 @@ const Events: React.FC = () => {
     } else {
       setSelectedTagIds(prev => prev.filter(id => id !== tagId));
     }
-    // Reload events after a short delay to avoid too many API calls
-    setTimeout(() => loadEvents(1, titleSearch, locationSearch), 100);
+    loadEvents(1, titleSearch, locationSearch);
   };
 
   const handleLoadMore = () => {
@@ -152,37 +139,8 @@ const Events: React.FC = () => {
           </p>
         </div>
 
-        {/* Login Prompt for Non-Authenticated Users */}
-        {!isAuthenticated && (
-          <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <div className="mb-4 sm:mb-0">
-                <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                  Want to create your own events?
-                </h3>
-                <p className="text-blue-700">
-                  Sign in to create, manage, and track your events. Join our community of event organizers!
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <Link to="/auth/login">
-                  <CustomButton variant="primary">
-                    Sign In
-                  </CustomButton>
-                </Link>
-                <Link to="/auth/signup">
-                  <CustomButton variant="secondary">
-                    Sign Up
-                  </CustomButton>
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Search and Filter Controls */}
-        {isAuthenticated && (
-          <div className="bg-white rounded-lg shadow-md p-4 mb-8">
+        <div className="bg-white rounded-lg shadow-md p-4 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Title Search */}
               <div className="space-y-2">
@@ -203,7 +161,6 @@ const Events: React.FC = () => {
                 </CustomButton>
               </div>
 
-              {/* Location Search */}
               <div className="space-y-2">
                 <CustomFormField
                   type="text"
@@ -293,7 +250,6 @@ const Events: React.FC = () => {
               </div>
             )}
           </div>
-        )}
 
         {/* Error Message */}
         {error && (
@@ -308,37 +264,12 @@ const Events: React.FC = () => {
           <>
             {events.length === 0 ? (
               <div className="text-center py-12">
-                {!isAuthenticated ? (
-                  <div>
-                    <div className="text-gray-500 text-lg mb-2">
-                      Sign in to browse events
-                    </div>
-                    <div className="text-gray-400 mb-4">
-                      Join our community to discover and create amazing events
-                    </div>
-                    <div className="flex gap-3 justify-center">
-                      <Link to="/auth/login">
-                        <CustomButton variant="primary">
-                          Sign In
-                        </CustomButton>
-                      </Link>
-                      <Link to="/auth/signup">
-                        <CustomButton variant="secondary">
-                          Sign Up
-                        </CustomButton>
-                      </Link>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="text-gray-500 text-lg mb-2">
-                      {(titleSearch || locationSearch) ? 'No events match your search' : 'No public events found'}
-                    </div>
-                    <div className="text-gray-400">
-                      {(titleSearch || locationSearch) ? 'Try adjusting your search terms' : 'Check back later for new events'}
-                    </div>
-                  </div>
-                )}
+                <div className="text-gray-500 text-lg mb-2">
+                  {(titleSearch || locationSearch || selectedCategoryId || selectedTagIds.length > 0) ? 'No events match your search' : 'No public events found'}
+                </div>
+                <div className="text-gray-400">
+                  {(titleSearch || locationSearch || selectedCategoryId || selectedTagIds.length > 0) ? 'Try adjusting your search terms' : 'Check back later for new events'}
+                </div>
               </div>
             ) : (
               <div className="space-y-6">
@@ -429,7 +360,6 @@ const Events: React.FC = () => {
               </div>
             )}
 
-            {/* Load More Button */}
             {hasMoreEvents && (
               <div className="text-center pt-8">
                 <CustomButton
