@@ -37,6 +37,7 @@ export interface UpdateEventData {
 export interface EventFilters {
   event_type?: 'public' | 'private';
   created_by?: number;
+  user_id?: number; // For filtering events by user (used in my-events)
   search?: string; 
   upcoming?: boolean; // Filter for upcoming events
   category_id?: number;
@@ -144,6 +145,10 @@ export class EventModel {
 
     if (filters.created_by) {
       query = query.where("events.created_by", filters.created_by);
+    }
+
+    if (filters.user_id) {
+      query = query.where("events.created_by", filters.user_id);
     }
 
     if (filters.category_id) {

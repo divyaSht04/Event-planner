@@ -199,18 +199,68 @@ export class EventController {
         return;
       }
 
-      const { page = 1, limit = 20 } = req.query;
+      const {
+        search,
+        upcoming,
+        category_id,
+        tag_ids,
+        page = 1,
+        limit = 20,
+      } = req.query;
+
+      const filters: EventFilters = {};
+      filters.user_id = req.user.id; // Only get events for the authenticated user
+      
+      if (search) {
+        filters.search = search as string;
+      }
+      
+      if (upcoming === 'true') {
+        filters.upcoming = true;
+      }
+
+      if (category_id) {
+        const categoryIdNum = parseInt(category_id as string, 10);
+        if (!isNaN(categoryIdNum)) {
+          filters.category_id = categoryIdNum;
+        }
+      }
+
+      if (tag_ids) {
+        try {
+          const tagIdsArray = Array.isArray(tag_ids) ? tag_ids : [tag_ids];
+          const tagIdsNumbers = tagIdsArray
+            .map(id => parseInt(id as string, 10))
+            .filter(id => !isNaN(id));
+          
+          if (tagIdsNumbers.length > 0) {
+            filters.tag_ids = tagIdsNumbers;
+          }
+        } catch (error) {
+          // Ignore invalid tag_ids
+        }
+      }
+
       const pageNum = parseInt(page as string, 10);
       const limitNum = parseInt(limit as string, 10);
       const offset = (pageNum - 1) * limitNum;
 
-      const events = await this.eventModel.findByUserId(
-        req.user.id, 
-        limitNum, 
-        offset
-      );
+      const [events, totalCount] = await Promise.all([
+        this.eventModel.findAll(filters, limitNum, offset),
+        this.eventModel.getEventCount(filters),
+      ]);
 
-      res.json({ events });
+      const totalPages = Math.ceil(totalCount / limitNum);
+
+      res.json({
+        events,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: totalCount,
+          totalPages,
+        },
+      });
     } catch (error) {
       console.error('Get user events error:', error);
       res.status(500).json({ error: 'Internal server error' });
