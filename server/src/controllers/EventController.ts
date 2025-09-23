@@ -92,8 +92,10 @@ export class EventController {
         upcoming,
         category_id,
         tag_ids,
+        date_start,
+        date_end,
         page = 1,
-        limit = 20,
+        limit = 10,
       } = req.query;
 
       const filters: EventFilters = {};
@@ -130,6 +132,15 @@ export class EventController {
         } catch (error) {
           // Ignore invalid tag_ids
         }
+      }
+
+      // Date filtering
+      if (date_start) {
+        filters.date_start = date_start as string;
+      }
+      
+      if (date_end) {
+        filters.date_end = date_end as string;
       }
 
       const pageNum = parseInt(page as string, 10);
@@ -204,6 +215,8 @@ export class EventController {
         upcoming,
         category_id,
         tag_ids,
+        date_start,
+        date_end,
         page = 1,
         limit = 20,
       } = req.query;
@@ -239,6 +252,15 @@ export class EventController {
         } catch (error) {
           // Ignore invalid tag_ids
         }
+      }
+
+      // Date filtering
+      if (date_start) {
+        filters.date_start = date_start as string;
+      }
+      
+      if (date_end) {
+        filters.date_end = date_end as string;
       }
 
       const pageNum = parseInt(page as string, 10);

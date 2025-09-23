@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Header, Footer } from '../../components';
 import CustomButton from '../../components/CustomButton';
 import { eventService } from '../../services/events';
@@ -49,10 +50,11 @@ const EventDetails: React.FC = () => {
 
     try {
       await eventService.deleteEvent(event.id!);
+      toast.success('Event deleted successfully!');
       navigate('/events/my');
     } catch (err: any) {
       console.error('Error deleting event:', err);
-      alert('Failed to delete event. Please try again.');
+      toast.error('Failed to delete event. Please try again.');
     }
   };
 

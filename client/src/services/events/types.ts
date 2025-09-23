@@ -43,6 +43,8 @@ export interface EventFilters {
   upcoming?: boolean;
   category_id?: number;
   tag_ids?: number[];
+  date_start?: string; // Start date for date range filtering (YYYY-MM-DD)
+  date_end?: string; // End date for date range filtering (YYYY-MM-DD)
 }
 
 export interface EventListResponse {

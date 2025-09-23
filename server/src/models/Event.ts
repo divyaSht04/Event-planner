@@ -42,6 +42,8 @@ export interface EventFilters {
   upcoming?: boolean; // Filter for upcoming events
   category_id?: number;
   tag_ids?: number[];
+  date_start?: string; // Start date for date range filtering (YYYY-MM-DD)
+  date_end?: string; // End date for date range filtering (YYYY-MM-DD)
 }
 
 export class EventModel {
@@ -173,6 +175,18 @@ export class EventModel {
 
     if (filters.upcoming) {
       query = query.where("events.event_date", ">=", new Date());
+    }
+
+    // Date range filtering
+    if (filters.date_start && filters.date_end) {
+      query = query.whereBetween("events.event_date", [
+        new Date(filters.date_start),
+        new Date(filters.date_end + ' 23:59:59') // Include the entire end date
+      ]);
+    } else if (filters.date_start) {
+      query = query.where("events.event_date", ">=", new Date(filters.date_start));
+    } else if (filters.date_end) {
+      query = query.where("events.event_date", "<=", new Date(filters.date_end + ' 23:59:59'));
     }
 
     const events = await query

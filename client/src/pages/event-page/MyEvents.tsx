@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Header, Footer } from '../../components';
 import { CustomButton, CustomFormField } from '../../components';
 import { eventService } from '../../services/events';
@@ -14,7 +15,16 @@ const MyEvents: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [titleSearch, setTitleSearch] = useState('');
   const [locationSearch, setLocationSearch] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [dateRange, setDateRange] = useState<{start: string, end: string}>({start: '', end: ''});
   const [filterType, setFilterType] = useState<'all' | 'public' | 'private' | 'upcoming' | 'past'>('all');
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    hasNext: false,
+    hasPrev: false,
+    totalCount: 0
+  });
   
   // Category and tag filtering state
   const [categories, setCategories] = useState<Category[]>([]);
@@ -22,7 +32,7 @@ const MyEvents: React.FC = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
 
-  const loadMyEvents = async () => {
+  const loadMyEvents = async (page: number = 1) => {
     try {
       setLoading(true);
       setError(null);
@@ -32,6 +42,8 @@ const MyEvents: React.FC = () => {
       
       // Build filters object
       const filters: any = {
+        page,
+        limit: 10,
         search: searchTerms || undefined,
         category_id: selectedCategoryId || undefined,
         tag_ids: selectedTagIds.length > 0 ? selectedTagIds : undefined
@@ -45,9 +57,42 @@ const MyEvents: React.FC = () => {
       } else if (filterType === 'upcoming') {
         filters.upcoming = true;
       }
+
+      // Add date filtering
+      if (dateFilter === 'today') {
+        const today = new Date().toISOString().split('T')[0];
+        filters.date_start = today;
+        filters.date_end = today;
+      } else if (dateFilter === 'week') {
+        const today = new Date();
+        const weekFromNow = new Date(today);
+        weekFromNow.setDate(today.getDate() + 7);
+        filters.date_start = today.toISOString().split('T')[0];
+        filters.date_end = weekFromNow.toISOString().split('T')[0];
+      } else if (dateFilter === 'month') {
+        const today = new Date();
+        const monthFromNow = new Date(today);
+        monthFromNow.setMonth(today.getMonth() + 1);
+        filters.date_start = today.toISOString().split('T')[0];
+        filters.date_end = monthFromNow.toISOString().split('T')[0];
+      } else if (dateFilter === 'custom' && dateRange.start && dateRange.end) {
+        filters.date_start = dateRange.start;
+        filters.date_end = dateRange.end;
+      }
       
       const response = await eventService.getMyEvents(filters);
       setEvents(response.events);
+      
+      // Update pagination state using backend response
+      if (response.pagination) {
+        setPagination({
+          currentPage: response.pagination.page,
+          totalPages: response.pagination.totalPages,
+          hasNext: response.pagination.hasNext,
+          hasPrev: response.pagination.hasPrev,
+          totalCount: response.pagination.total
+        });
+      }
     } catch (err: any) {
       console.error('Error loading my events:', err);
       setError('Failed to load your events. Please try again.');
@@ -57,8 +102,8 @@ const MyEvents: React.FC = () => {
   };
 
   useEffect(() => {
-    loadMyEvents();
-  }, [titleSearch, locationSearch, filterType, selectedCategoryId, selectedTagIds]);
+    loadMyEvents(1);
+  }, [titleSearch, locationSearch, filterType, selectedCategoryId, selectedTagIds, dateFilter, dateRange]);
 
   const loadCategoriesAndTags = async () => {
     try {
@@ -89,6 +134,12 @@ const MyEvents: React.FC = () => {
     navigate(`/events/${eventId}`);
   };
 
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages) {
+      loadMyEvents(newPage);
+    }
+  };
+
   const handleDeleteEvent = async (event: Event) => {
     if (!window.confirm(`Are you sure you want to delete "${event.title}"?`)) {
       return;
@@ -96,11 +147,12 @@ const MyEvents: React.FC = () => {
 
     try {
       await eventService.deleteEvent(event.id!);
+      toast.success('Event deleted successfully!');
       // Remove the deleted event from the list
       setEvents(prev => prev.filter(e => e.id !== event.id));
     } catch (err: any) {
       console.error('Error deleting event:', err);
-      alert('Failed to delete event. Please try again.');
+      toast.error('Failed to delete event. Please try again.');
     }
   };
 
@@ -160,9 +212,17 @@ const MyEvents: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">My Events</h1>
-            <p className="text-gray-600">
-              Manage your created events
-            </p>
+            <div className="flex justify-between items-center">
+              <p className="text-gray-600">
+                Manage your created events
+              </p>
+              {pagination.totalCount > 0 && (
+                <p className="text-sm text-gray-500">
+                  Showing {events.length} of {pagination.totalCount} events
+                  {pagination.totalPages > 1 && ` (Page ${pagination.currentPage} of ${pagination.totalPages})`}
+                </p>
+              )}
+            </div>
           </div>
           <div className="mt-4 sm:mt-0">
             <CustomButton
@@ -207,7 +267,7 @@ const MyEvents: React.FC = () => {
         {/* Search and Filter Controls */}
         {!loading && events.length > 0 && (
           <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               {/* Title Search */}
               <div className="space-y-2">
                 <CustomFormField
@@ -220,7 +280,7 @@ const MyEvents: React.FC = () => {
                 />
                 <CustomButton
                   variant="secondary"
-                  onClick={loadMyEvents}
+                  onClick={() => loadMyEvents(1)}
                   className="w-full"
                 >
                   Filter by Title
@@ -239,11 +299,29 @@ const MyEvents: React.FC = () => {
                 />
                 <CustomButton
                   variant="secondary"
-                  onClick={loadMyEvents}
+                  onClick={() => loadMyEvents(1)}
                   className="w-full"
                 >
                   Filter by Location
                 </CustomButton>
+              </div>
+
+              {/* Date Filter */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Filter by Date
+                </label>
+                <select
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">All Dates</option>
+                  <option value="today">Today</option>
+                  <option value="week">Next 7 Days</option>
+                  <option value="month">Next Month</option>
+                  <option value="custom">Custom Range</option>
+                </select>
               </div>
 
               {/* Event Type Filter */}
@@ -275,9 +353,11 @@ const MyEvents: React.FC = () => {
                     setTitleSearch('');
                     setLocationSearch('');
                     setFilterType('all');
+                    setDateFilter('');
+                    setDateRange({start: '', end: ''});
                     setSelectedCategoryId(null);
                     setSelectedTagIds([]);
-                    loadMyEvents();
+                    loadMyEvents(1);
                   }}
                   className="w-full"
                 >
@@ -334,14 +414,46 @@ const MyEvents: React.FC = () => {
               </div>
             </div>
 
+            {/* Custom Date Range */}
+            {dateFilter === 'custom' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={dateRange.start}
+                    onChange={(e) => setDateRange(prev => ({...prev, start: e.target.value}))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    value={dateRange.end}
+                    onChange={(e) => setDateRange(prev => ({...prev, end: e.target.value}))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Results Summary */}
             <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
-              {titleSearch || locationSearch || filterType !== 'all' ? (
+              {titleSearch || locationSearch || filterType !== 'all' || dateFilter || selectedCategoryId || selectedTagIds.length > 0 ? (
                 <span>
                   Showing {events.length} events
                   {titleSearch && ` with title "${titleSearch}"`}
                   {locationSearch && ` at location "${locationSearch}"`}
                   {filterType !== 'all' && ` (${filterType} events)`}
+                  {selectedCategoryId && ` in category "${categories.find(c => c.id === selectedCategoryId)?.name}"`}
+                  {selectedTagIds.length > 0 && ` with tags: ${selectedTagIds.map(id => tags.find(t => t.id === id)?.name).join(', ')}`}
+                  {dateFilter && dateFilter !== 'custom' && ` for ${dateFilter === 'today' ? 'today' : dateFilter === 'week' ? 'next 7 days' : 'next month'}`}
+                  {dateFilter === 'custom' && dateRange.start && dateRange.end && ` from ${dateRange.start} to ${dateRange.end}`}
                 </span>
               ) : (
                 <span>Showing {events.length} events</span>
@@ -475,6 +587,63 @@ const MyEvents: React.FC = () => {
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {pagination.totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-8">
+                {/* Previous Button */}
+                <CustomButton
+                  variant="secondary"
+                  onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  disabled={!pagination.hasPrev || loading}
+                  className="px-3 py-2"
+                >
+                  ← Previous
+                </CustomButton>
+
+                {/* Page Numbers */}
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((pageNum) => {
+                    const isCurrentPage = pageNum === pagination.currentPage;
+                    const isNearCurrentPage = Math.abs(pageNum - pagination.currentPage) <= 2;
+                    const isFirstOrLast = pageNum === 1 || pageNum === pagination.totalPages;
+                    
+                    if (!isNearCurrentPage && !isFirstOrLast) {
+                      // Show ellipsis for pages that are too far
+                      if (pageNum === 2 || pageNum === pagination.totalPages - 1) {
+                        return <span key={pageNum} className="px-2 text-gray-400">...</span>;
+                      }
+                      return null;
+                    }
+
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        disabled={loading}
+                        className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          isCurrentPage
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Next Button */}
+                <CustomButton
+                  variant="secondary"
+                  onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  disabled={!pagination.hasNext || loading}
+                  className="px-3 py-2"
+                >
+                  Next →
+                </CustomButton>
               </div>
             )}
           </>
