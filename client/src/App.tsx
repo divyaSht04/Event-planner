@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context';
 import { HomePage, DashboardPage, LoginPage, SignupPage, NotFound } from './pages';
 import { Events, CreateEvent, EditEvent, EventDetails, MyEvents } from './pages/event-page';
@@ -15,10 +16,17 @@ const App: React.FC = () => {
             <Route path="/auth/login" element={<LoginPage />} />
             <Route path="/auth/signup" element={<SignupPage />} />
             
-            {/* Public event routes */}
-            <Route path="/events" element={<Events />} />
-            <Route path="/events/:id" element={<EventDetails />} />
-            
+            <Route path="/events" element={
+              <ProtectedRoute>
+                <Events />
+              </ProtectedRoute>
+            } />
+            <Route path="/events/:id" element={
+              <ProtectedRoute>
+                <EventDetails />
+              </ProtectedRoute>
+            } />
+
             <Route 
               path="/events/my" 
               element={
@@ -56,6 +64,36 @@ const App: React.FC = () => {
 
             <Route path="*" element={<NotFound />} />
           </Routes>
+          
+          <Toaster 
+            position="top-right"
+            reverseOrder={false}
+            gutter={8}
+            containerClassName=""
+            containerStyle={{}}
+            toastOptions={{
+              className: '',
+              duration: 1500,
+              style: {
+                background: '#ffffffff',
+                color: '#000000ff',
+              },
+              success: {
+                duration: 2000,
+                iconTheme: {
+                  primary: '#45a916ff',
+                  secondary: '#4524c9ff',
+                },
+              },
+              error: {
+                duration: 2500,
+                iconTheme: {
+                  primary: '#ff6b6b',
+                  secondary: '#b93781ff',
+                },
+              },
+            }}
+          />
         </div>
       </Router>
     </AuthProvider>
