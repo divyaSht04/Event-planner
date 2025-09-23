@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Header, Footer } from '../../components';
 import { CustomForm, CustomFormField, CustomButton } from '../../components';
 import { eventService, tagService, categoryService } from '../../services';
@@ -154,9 +155,11 @@ const EditEvent: React.FC = () => {
       };
 
       await eventService.updateEvent(event.id!, updateData);
+      toast.success('Event updated successfully!');
       navigate('/events/my'); // Redirect to my events after update
     } catch (err: any) {
       console.error('Error updating event:', err);
+      toast.error(err.message || 'Failed to update event. Please try again.');
       setError(err.message || 'Failed to update event. Please try again.');
     } finally {
       setIsLoading(false);

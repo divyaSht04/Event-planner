@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Header, Footer } from '../../components';
 import { CustomForm, CustomFormField, CustomButton } from '../../components';
 import { eventService, tagService, categoryService } from '../../services';
@@ -126,9 +127,11 @@ const CreateEvent: React.FC = () => {
       };
 
       await eventService.createEvent(eventData);
+      toast.success('Event created successfully!');
       navigate('/events/my');
     } catch (err: any) {
       console.error('Error creating event:', err);
+      toast.error(err.message || 'Failed to create event. Please try again.');
       setError(err.message || 'Failed to create event. Please try again.');
     } finally {
       setIsLoading(false);
