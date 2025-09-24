@@ -130,7 +130,7 @@ export class EventModel {
     };
   }
 
-  async findAll(filters: EventFilters = {}, limit: number = 20, offset: number = 0): Promise<Event[]> {
+  async findAll(filters: EventFilters = {}, limit: number = 5, offset: number = 0): Promise<Event[]> {
     let query = this.db("events")
       .leftJoin("users", "events.created_by", "users.id")
       .leftJoin("categories", "events.category_id", "categories.id")
@@ -227,22 +227,22 @@ export class EventModel {
   }
 
   async findByUserId(userId: number, limit: number = 20, offset: number = 0): Promise<Event[]> {
-    return await this.db("events")
-      .where("created_by", userId)
-      .select([
-        "id",
-        "title",
-        "description", 
-        "event_date",
-        "location",
-        "event_type",
-        "created_by",
-        "created_at",
-        "updated_at"
-      ])
-      .orderBy("event_date", "asc")
-      .limit(limit)
-      .offset(offset);
+    return this.db("events")
+        .where("created_by", userId)
+        .select([
+            "id",
+            "title",
+            "description",
+            "event_date",
+            "location",
+            "event_type",
+            "created_by",
+            "created_at",
+            "updated_at"
+        ])
+        .orderBy("event_date", "asc")
+        .limit(limit)
+        .offset(offset);
   }
 
   async update(id: number, updateData: UpdateEventData): Promise<Event | null> {
@@ -291,28 +291,28 @@ export class EventModel {
   }
 
   async getUpcomingEvents(limit: number = 10): Promise<Event[]> {
-    return await this.db("events")
-      .leftJoin("users", "events.created_by", "users.id")
-      .where("events.event_date", ">=", new Date())
-      .where("events.event_type", "public")
-      .select([
-        "events.*",
-        "users.name as creator_name"
-      ])
-      .orderBy("events.event_date", "asc")
-      .limit(limit);
+    return this.db("events")
+        .leftJoin("users", "events.created_by", "users.id")
+        .where("events.event_date", ">=", new Date())
+        .where("events.event_type", "public")
+        .select([
+            "events.*",
+            "users.name as creator_name"
+        ])
+        .orderBy("events.event_date", "asc")
+        .limit(limit);
   }
 
   async getPastEvents(limit: number = 10): Promise<Event[]> {
-    return await this.db("events")
-      .leftJoin("users", "events.created_by", "users.id")
-      .where("events.event_date", "<", new Date())
-      .select([
-        "events.*",
-        "users.name as creator_name"
-      ])
-      .orderBy("events.event_date", "desc")
-      .limit(limit);
+    return this.db("events")
+        .leftJoin("users", "events.created_by", "users.id")
+        .where("events.event_date", "<", new Date())
+        .select([
+            "events.*",
+            "users.name as creator_name"
+        ])
+        .orderBy("events.event_date", "desc")
+        .limit(limit);
   }
 
   async getEventCount(filters: EventFilters = {}): Promise<number> {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header, Footer } from '../../components';
 import { CustomFormField, CustomButton } from '../../components';
-import { eventService } from '../../services/events';
+import { eventService } from '../../services';
 import tagService from '../../services/tags';
 import categoryService from '../../services/categories';
 import type { Event, Tag, Category } from '../../services/events';
@@ -40,14 +40,13 @@ const Events: React.FC = () => {
       // Build filters object with date filtering
       const filters: any = {
         page, 
-        limit: 10, 
+        limit: 5,
         search: searchTerms || undefined,
         event_type: 'public',
         category_id: selectedCategoryId || undefined,
         tag_ids: selectedTagIds.length > 0 ? selectedTagIds : undefined
       };
 
-      // Add date filtering
       if (dateFilter === 'today') {
         const today = new Date().toISOString().split('T')[0];
         filters.date_start = today;
@@ -70,8 +69,7 @@ const Events: React.FC = () => {
       }
       
       const response = await eventService.getAllEvents(filters);
-      
-      // Replace events for new page instead of appending
+
       setEvents(response.events);
       
       // Update pagination state using backend response
