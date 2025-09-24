@@ -124,7 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-// Custom hook to use auth context
+
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -133,5 +133,5 @@ export const useAuth = (): AuthContextType => {
   return context;
 };
 
-// Export context for advanced usage
+
 export default AuthContext;
