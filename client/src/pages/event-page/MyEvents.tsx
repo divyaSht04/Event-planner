@@ -13,11 +13,11 @@ const MyEvents: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [titleSearch, setTitleSearch] = useState('');
-  const [locationSearch, setLocationSearch] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
-  const [dateRange, setDateRange] = useState<{start: string, end: string}>({start: '', end: ''});
-  const [filterType, setFilterType] = useState<'all' | 'public' | 'private' | 'upcoming' | 'past'>('all');
+  const [search, setSearch] = useState('');
+  const [eventType, setEventType] = useState<'public' | 'private' | ''>('');
+  const [upcoming, setUpcoming] = useState(false);
+  const [dateStart, setDateStart] = useState('');
+  const [dateEnd, setDateEnd] = useState('');
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -37,48 +37,17 @@ const MyEvents: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      // Combine title and location searches into one search term
-      const searchTerms = [titleSearch, locationSearch].filter(term => term.trim()).join(' ');
-      
-      // Build filters object
       const filters: any = {
         page,
-        limit: 10,
-        search: searchTerms || undefined,
+        limit: 5,
+        search: search || undefined,
+        event_type: eventType || undefined,
+        upcoming: upcoming || undefined,
         category_id: selectedCategoryId || undefined,
-        tag_ids: selectedTagIds.length > 0 ? selectedTagIds : undefined
+        tag_ids: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+        date_start: dateStart || undefined,
+        date_end: dateEnd || undefined
       };
-      
-      // Add event type filter
-      if (filterType === 'public') {
-        filters.event_type = 'public';
-      } else if (filterType === 'private') {
-        filters.event_type = 'private';
-      } else if (filterType === 'upcoming') {
-        filters.upcoming = true;
-      }
-
-      // Add date filtering
-      if (dateFilter === 'today') {
-        const today = new Date().toISOString().split('T')[0];
-        filters.date_start = today;
-        filters.date_end = today;
-      } else if (dateFilter === 'week') {
-        const today = new Date();
-        const weekFromNow = new Date(today);
-        weekFromNow.setDate(today.getDate() + 7);
-        filters.date_start = today.toISOString().split('T')[0];
-        filters.date_end = weekFromNow.toISOString().split('T')[0];
-      } else if (dateFilter === 'month') {
-        const today = new Date();
-        const monthFromNow = new Date(today);
-        monthFromNow.setMonth(today.getMonth() + 1);
-        filters.date_start = today.toISOString().split('T')[0];
-        filters.date_end = monthFromNow.toISOString().split('T')[0];
-      } else if (dateFilter === 'custom' && dateRange.start && dateRange.end) {
-        filters.date_start = dateRange.start;
-        filters.date_end = dateRange.end;
-      }
       
       const response = await eventService.getMyEvents(filters);
       setEvents(response.events);
@@ -103,7 +72,7 @@ const MyEvents: React.FC = () => {
 
   useEffect(() => {
     loadMyEvents(1);
-  }, [titleSearch, locationSearch, filterType, selectedCategoryId, selectedTagIds, dateFilter, dateRange]);
+  }, []);
 
   const loadCategoriesAndTags = async () => {
     try {
@@ -138,6 +107,29 @@ const MyEvents: React.FC = () => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
       loadMyEvents(newPage);
     }
+  };
+
+  const handleTagChange = (tagId: number, checked: boolean) => {
+    if (checked) {
+      setSelectedTagIds(prev => [...prev, tagId]);
+    } else {
+      setSelectedTagIds(prev => prev.filter(id => id !== tagId));
+    }
+  };
+
+  const handleApplyFilters = () => {
+    loadMyEvents(1);
+  };
+
+  const handleClearFilters = () => {
+    setSearch('');
+    setEventType('');
+    setUpcoming(false);
+    setDateStart('');
+    setDateEnd('');
+    setSelectedCategoryId(null);
+    setSelectedTagIds([]);
+    loadMyEvents(1);
   };
 
   const handleDeleteEvent = async (event: Event) => {
@@ -264,200 +256,114 @@ const MyEvents: React.FC = () => {
           </div>
         )}
 
-        {/* Search and Filter Controls */}
+        {/* Filter Controls */}
         {!loading && events.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              {/* Title Search */}
-              <div className="space-y-2">
-                <CustomFormField
-                  type="text"
-                  name="titleSearch"
-                  label="Search by Title"
-                  placeholder="Event title..."
-                  value={titleSearch}
-                  onChange={(e) => setTitleSearch(e.target.value)}
-                />
-                <CustomButton
-                  variant="secondary"
-                  onClick={() => loadMyEvents(1)}
-                  className="w-full"
-                >
-                  Filter by Title
-                </CustomButton>
-              </div>
+          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Filter My Events</h2>
 
-              {/* Location Search */}
-              <div className="space-y-2">
-                <CustomFormField
-                  type="text"
-                  name="locationSearch"
-                  label="Search by Location"
-                  placeholder="Event location..."
-                  value={locationSearch}
-                  onChange={(e) => setLocationSearch(e.target.value)}
-                />
-                <CustomButton
-                  variant="secondary"
-                  onClick={() => loadMyEvents(1)}
-                  className="w-full"
-                >
-                  Filter by Location
-                </CustomButton>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              {/* Search */}
+              <CustomFormField
+                type="text"
+                name="search"
+                label="Search"
+                placeholder="Title, description, location..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
 
-              {/* Date Filter */}
+              {/* Event Type */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Filter by Date
-                </label>
+                <label className="block text-sm font-medium text-gray-700">Event Type</label>
                 <select
-                  value={dateFilter}
-                  onChange={(e) => setDateFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={eventType}
+                  onChange={(e) => setEventType(e.target.value as 'public' | 'private' | '')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">All Dates</option>
-                  <option value="today">Today</option>
-                  <option value="week">Next 7 Days</option>
-                  <option value="month">Next Month</option>
-                  <option value="custom">Custom Range</option>
+                  <option value="">All Types</option>
+                  <option value="public">Public</option>
+                  <option value="private">Private</option>
                 </select>
               </div>
 
-              {/* Event Type Filter */}
+              {/* Category */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Event Type
-                </label>
-                <select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value as any)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="all">All Events</option>
-                  <option value="upcoming">Upcoming</option>
-                  <option value="past">Past Events</option>
-                  <option value="public">Public Events</option>
-                  <option value="private">Private Events</option>
-                </select>
-              </div>
-
-              {/* Clear Filters */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Actions
-                </label>
-                <CustomButton
-                  variant="danger"
-                  onClick={() => {
-                    setTitleSearch('');
-                    setLocationSearch('');
-                    setFilterType('all');
-                    setDateFilter('');
-                    setDateRange({start: '', end: ''});
-                    setSelectedCategoryId(null);
-                    setSelectedTagIds([]);
-                    loadMyEvents(1);
-                  }}
-                  className="w-full"
-                >
-                  Clear All Filters
-                </CustomButton>
-              </div>
-            </div>
-
-            {/* Category and Tag Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              {/* Category Filter */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Filter by Category
-                </label>
+                <label className="block text-sm font-medium text-gray-700">Category</label>
                 <select
                   value={selectedCategoryId || ''}
                   onChange={(e) => setSelectedCategoryId(e.target.value ? parseInt(e.target.value) : null)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All Categories</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
+                  {categories.map(category => (
+                    <option key={category.id} value={category.id}>{category.name}</option>
                   ))}
                 </select>
               </div>
 
-              {/* Tags Filter */}
+              {/* Upcoming Only */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Filter by Tags
-                </label>
-                <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                  {tags.map((tag) => (
-                    <label key={tag.id} className="flex items-center text-sm">
+                <label className="block text-sm font-medium text-gray-700">Show Only</label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="upcoming"
+                    checked={upcoming}
+                    onChange={(e) => setUpcoming(e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label htmlFor="upcoming" className="text-sm text-gray-700">Upcoming Events</label>
+                </div>
+              </div>
+            </div>
+
+            {/* Date Range */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <CustomFormField
+                type="date"
+                name="dateStart"
+                label="Start Date"
+                value={dateStart}
+                onChange={(e) => setDateStart(e.target.value)}
+              />
+
+              <CustomFormField
+                type="date"
+                name="dateEnd"
+                label="End Date"
+                value={dateEnd}
+                onChange={(e) => setDateEnd(e.target.value)}
+              />
+            </div>
+
+            {/* Tags */}
+            {tags.length > 0 && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                <div className="flex flex-wrap gap-2">
+                  {tags.map(tag => (
+                    <label key={tag.id} className="flex items-center space-x-2">
                       <input
                         type="checkbox"
                         checked={selectedTagIds.includes(tag.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedTagIds(prev => [...prev, tag.id]);
-                          } else {
-                            setSelectedTagIds(prev => prev.filter(id => id !== tag.id));
-                          }
-                        }}
-                        className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        onChange={(e) => handleTagChange(tag.id, e.target.checked)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
-                      {tag.name}
+                      <span className="text-sm text-gray-700">{tag.name}</span>
                     </label>
                   ))}
                 </div>
               </div>
-            </div>
-
-            {/* Custom Date Range */}
-            {dateFilter === 'custom' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    value={dateRange.start}
-                    onChange={(e) => setDateRange(prev => ({...prev, start: e.target.value}))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    value={dateRange.end}
-                    onChange={(e) => setDateRange(prev => ({...prev, end: e.target.value}))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </div>
             )}
 
-            {/* Results Summary */}
-            <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
-              {titleSearch || locationSearch || filterType !== 'all' || dateFilter || selectedCategoryId || selectedTagIds.length > 0 ? (
-                <span>
-                  Showing {events.length} events
-                  {titleSearch && ` with title "${titleSearch}"`}
-                  {locationSearch && ` at location "${locationSearch}"`}
-                  {filterType !== 'all' && ` (${filterType} events)`}
-                  {selectedCategoryId && ` in category "${categories.find(c => c.id === selectedCategoryId)?.name}"`}
-                  {selectedTagIds.length > 0 && ` with tags: ${selectedTagIds.map(id => tags.find(t => t.id === id)?.name).join(', ')}`}
-                  {dateFilter && dateFilter !== 'custom' && ` for ${dateFilter === 'today' ? 'today' : dateFilter === 'week' ? 'next 7 days' : 'next month'}`}
-                  {dateFilter === 'custom' && dateRange.start && dateRange.end && ` from ${dateRange.start} to ${dateRange.end}`}
-                </span>
-              ) : (
-                <span>Showing {events.length} events</span>
-              )}
+            {/* Filter Buttons */}
+            <div className="flex space-x-2">
+              <CustomButton onClick={handleApplyFilters} variant="primary">
+                Apply Filters
+              </CustomButton>
+              <CustomButton onClick={handleClearFilters} variant="secondary">
+                Clear Filters
+              </CustomButton>
             </div>
           </div>
         )}
