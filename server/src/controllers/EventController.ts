@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { EventModel, CreateEventData, UpdateEventData, EventFilters } from '../models/Event';
+import { logger } from '../config/LoggerConfig';
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -20,7 +21,10 @@ export class EventController {
     try {
       const { title, description, event_date, location, event_type, category_id, tag_ids } = req.body;
 
+      logger.info(`Event creation attempt by user ${req.user?.id}: ${title}`);
+
       if (!title || !event_date || !location) {
+        logger.warn(`Event creation failed - missing fields by user ${req.user?.id}`);
         res.status(400).json({ 
           error: 'Title, event date, and location are required' 
         });
@@ -79,7 +83,8 @@ export class EventController {
         event,
       });
     } catch (error) {
-      console.error('Event creation error:', error);
+      logger.error(`Event creation failed by user ${req.user?.id}: ${error}`);
+      logger.error(`Event creation error: ${error}`);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -166,7 +171,7 @@ export class EventController {
         },
       });
     } catch (error) {
-      console.error('Get events error:', error);
+      logger.error(`Get events error: ${error}`);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -197,7 +202,7 @@ export class EventController {
 
       res.json({ event });
     } catch (error) {
-      console.error('Get event by ID error:', error);
+      logger.error(`Get event by ID error: ${error}`);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -284,7 +289,7 @@ export class EventController {
         },
       });
     } catch (error) {
-      console.error('Get user events error:', error);
+      logger.error(`Get user events error: ${error}`);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -417,7 +422,7 @@ export class EventController {
         event: updatedEvent,
       });
     } catch (error) {
-      console.error('Update event error:', error);
+      logger.error(`Update event error: ${error}`);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -466,7 +471,7 @@ export class EventController {
 
       res.json({ message: 'Event deleted successfully' });
     } catch (error) {
-      console.error('Delete event error:', error);
+      logger.error(`Delete event error: ${error}`);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -481,7 +486,7 @@ export class EventController {
 
       res.json({ events });
     } catch (error) {
-      console.error('Get upcoming events error:', error);
+      logger.error(`Get upcoming events error: ${error}`);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -496,7 +501,7 @@ export class EventController {
 
       res.json({ events });
     } catch (error) {
-      console.error('Get past events error:', error);
+      logger.error(`Get past events error: ${error}`);
       res.status(500).json({ error: 'Internal server error' });
     }
   }

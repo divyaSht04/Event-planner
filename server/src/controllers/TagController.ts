@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Knex } from 'knex';
 import TagModel, { CreateTagData, UpdateTagData } from '../models/Tag';
+import { logger } from '../config/LoggerConfig';
 
 class TagController {
   private tagModel: TagModel;
@@ -19,7 +20,7 @@ class TagController {
         message: 'Tags retrieved successfully'
       });
     } catch (error: any) {
-      console.error('Error getting tags:', error);
+      logger.error(`Error getting tags: ${error}`);
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve tags'
@@ -56,7 +57,7 @@ class TagController {
         message: 'Tag retrieved successfully'
       });
     } catch (error: any) {
-      console.error('Error getting tag:', error);
+      logger.error(`Error getting tag: ${error}`);
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve tag'
@@ -109,7 +110,7 @@ class TagController {
         message: 'Tag created successfully'
       });
     } catch (error: any) {
-      console.error('Error creating tag:', error);
+      logger.error(`Error creating tag: ${error}`);
       res.status(500).json({
         success: false,
         error: 'Failed to create tag'
@@ -186,7 +187,7 @@ class TagController {
         message: 'Tag updated successfully'
       });
     } catch (error: any) {
-      console.error('Error updating tag:', error);
+      logger.error(`Error updating tag: ${error}`);
       res.status(500).json({
         success: false,
         error: 'Failed to update tag'
@@ -232,7 +233,7 @@ class TagController {
         message: 'Tag deleted successfully'
       });
     } catch (error: any) {
-      console.error('Error deleting tag:', error);
+      logger.error(`Error deleting tag: ${error}`);
       res.status(500).json({
         success: false,
         error: 'Failed to delete tag'
@@ -271,7 +272,7 @@ class TagController {
         message: 'Tag events retrieved successfully'
       });
     } catch (error: any) {
-      console.error('Error getting tag events:', error);
+      logger.error(`Error getting tag events: ${error}`);
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve tag events'

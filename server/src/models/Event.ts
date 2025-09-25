@@ -1,4 +1,5 @@
 import { Knex } from "knex";
+import { logger } from '../config/LoggerConfig';
 
 export interface Event {
   id?: number;
@@ -382,7 +383,7 @@ export class EventModel {
       await this.db("event_tags").insert(tagAssociations);
       return true;
     } catch (error) {
-      console.error('Error adding tags to event:', error);
+      logger.error(`Error adding tags to event: ${error}`);
       return false;
     }
   }
@@ -398,7 +399,7 @@ export class EventModel {
       await query.del();
       return true;
     } catch (error) {
-      console.error('Error removing tags from event:', error);
+      logger.error(`Error removing tags from event: ${error}`);
       return false;
     }
   }
