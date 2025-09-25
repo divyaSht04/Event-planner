@@ -1,22 +1,5 @@
 import { Knex } from 'knex';
-
-export interface Category {
-  id?: number;
-  name: string;
-  description?: string;
-  created_at?: Date;
-  updated_at?: Date;
-}
-
-export interface CreateCategoryData {
-  name: string;
-  description?: string;
-}
-
-export interface UpdateCategoryData {
-  name?: string;
-  description?: string;
-}
+import type { Category, CreateCategoryData, UpdateCategoryData } from "./model-types";
 
 class CategoryModel {
   private tableName = 'categories';

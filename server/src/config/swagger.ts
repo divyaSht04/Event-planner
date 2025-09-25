@@ -42,5 +42,3 @@ export const setupSwagger = (app: Express) => {
     customSiteTitle: 'Event Planner API Documentation',
   }));
 };
-
-export default specs;

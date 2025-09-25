@@ -1,13 +1,14 @@
 import { Request, Response } from 'express';
-import { EventModel, CreateEventData, UpdateEventData, EventFilters } from '../models/Event';
+import { EventModel } from '../models/Event';
+import type {  CreateEventData, UpdateEventData, EventFilters, } from '../models/model-types';
 import { logger } from '../config/LoggerConfig';
 
 interface AuthenticatedRequest extends Request {
-  user?: {
-    id: number;
-    email: string;
-    name: string;
-  };
+    user?: {
+        id: number;
+        email: string;
+        name: string;
+    };
 }
 
 export class EventController {
@@ -85,7 +86,7 @@ export class EventController {
     } catch (error) {
       logger.error(`Event creation failed by user ${req.user?.id}: ${error}`);
       logger.error(`Event creation error: ${error}`);
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).json({ error: 'Server is currently busy, try again later' });
     }
   }
 
@@ -172,7 +173,7 @@ export class EventController {
       });
     } catch (error) {
       logger.error(`Get events error: ${error}`);
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).json({ error: 'Server is currently busy, try again later' });
     }
   }
 
@@ -203,7 +204,7 @@ export class EventController {
       res.json({ event });
     } catch (error) {
       logger.error(`Get event by ID error: ${error}`);
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).json({ error: 'Server is currently busy, try again later' });
     }
   }
 
@@ -290,7 +291,7 @@ export class EventController {
       });
     } catch (error) {
       logger.error(`Get user events error: ${error}`);
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).json({ error: 'Server is currently busy, try again later' });
     }
   }
 
@@ -423,7 +424,7 @@ export class EventController {
       });
     } catch (error) {
       logger.error(`Update event error: ${error}`);
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).json({ error: 'Server is currently busy, try again later' });
     }
   }
 
@@ -472,7 +473,7 @@ export class EventController {
       res.json({ message: 'Event deleted successfully' });
     } catch (error) {
       logger.error(`Delete event error: ${error}`);
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).json({ error: 'Server is currently busy, try again later' });
     }
   }
 
@@ -487,7 +488,7 @@ export class EventController {
       res.json({ events });
     } catch (error) {
       logger.error(`Get upcoming events error: ${error}`);
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).json({ error: 'Server is currently busy, try again later' });
     }
   }
 
@@ -502,7 +503,7 @@ export class EventController {
       res.json({ events });
     } catch (error) {
       logger.error(`Get past events error: ${error}`);
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).json({ error: 'Server is currently busy, try again later' });
     }
   }
 }
