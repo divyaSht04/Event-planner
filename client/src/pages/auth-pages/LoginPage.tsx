@@ -60,7 +60,7 @@ const LoginPage: React.FC = () => {
       navigate(from, { replace: true });
     } catch (error) {
       console.error('Login error:', error);
-      toast.error('Failed to sign in. Please check your credentials.');
+      toast.error('Failed to sign in.' + error);
     }
   };
 

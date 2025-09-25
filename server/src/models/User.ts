@@ -1,28 +1,6 @@
 import { Knex } from "knex";
 import bcrypt from "bcrypt";
-
-export interface User {
-  id?: number;
-  name: string;
-  email: string;
-  password: string;
-  phone_number: string;
-  refresh_token?: string;
-  created_at?: Date;
-  updated_at?: Date;
-}
-
-export interface CreateUserData {
-  email: string;
-  password: string;
-  name: string;
-  phone_number: string;
-}
-
-export interface LoginData {
-  email: string;
-  password: string;
-}
+import type { User, CreateUserData, LoginData } from "./model-types";
 
 export class UserModel {
   private db: Knex;
@@ -54,31 +32,31 @@ export class UserModel {
   }
 
   async findByEmail(email: string): Promise<User> {
-    return await this.db("users")
-      .where({ email })
-      .select(["id", "email", "password", "name", "phone_number", "refresh_token", "created_at", "updated_at"])
-      .first();
+    return this.db("users")
+        .where({email})
+        .select(["id", "email", "password", "name", "phone_number", "refresh_token", "created_at", "updated_at"])
+        .first();
   }
 
   async findById(id: number): Promise<User> {
-    return await this.db("users")
-      .where({ id })
-      .select(["id", "email", "name", "phone_number", "created_at", "updated_at"])
-      .first();
+    return this.db("users")
+        .where({id})
+        .select(["id", "email", "name", "phone_number", "created_at", "updated_at"])
+        .first();
   }
 
   async findByRefreshToken(refreshToken: string): Promise<User | undefined> {
-    return await this.db("users")
-      .where({ refresh_token: refreshToken })
-      .select(["id", "email", "name", "phone_number", "created_at", "updated_at"])
-      .first();
+    return this.db("users")
+        .where({refresh_token: refreshToken})
+        .select(["id", "email", "name", "phone_number", "created_at", "updated_at"])
+        .first();
   }
 
   async findByPhoneNumber(phoneNumber: string): Promise<User | undefined> {
-    return await this.db("users")
-      .where({ phone_number: phoneNumber })
-      .select(["id", "email", "name", "phone_number", "created_at", "updated_at"])
-      .first();
+    return this.db("users")
+        .where({phone_number: phoneNumber})
+        .select(["id", "email", "name", "phone_number", "created_at", "updated_at"])
+        .first();
   }
 
   async updateRefreshToken(userId: number, refreshToken: string | null): Promise<void> {

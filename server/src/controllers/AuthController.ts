@@ -1,6 +1,7 @@
 import {Request, Response} from 'express';
 import jwt from 'jsonwebtoken';
-import {UserModel, CreateUserData, LoginData} from '../models/User';
+import {UserModel} from '../models/User';
+import type { CreateUserData, LoginData } from '../models/model-types';
 import { logger } from '../config/LoggerConfig';
 
 export class AuthController {
@@ -45,7 +46,7 @@ export class AuthController {
 
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            secure: false, 
+            secure: false,
             sameSite: 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days 
             path: '/',
@@ -112,7 +113,7 @@ export class AuthController {
                 phone_number: phone_number
             };
 
-           
+
 
             const user = await this.userModel.create(userData);
             logger.info(`User data:, ${user.id}, ${user.email}, ${user.name}, ${user.phone_number}`);
@@ -139,7 +140,7 @@ export class AuthController {
         } catch (error) {
             logger.error(`Registration failed: ${req.body.email || 'unknown'} - ${error}`);
             logger.error(`Registration error: ${error}`);
-            res.status(500).json({error: 'Internal server error'});
+            res.status(500).json({error: 'Server is currently busy, try again later'});
         }
     }
 
@@ -189,7 +190,7 @@ export class AuthController {
         } catch (error) {
             logger.error(`Login failed: ${req.body.email || 'unknown'} - ${error}`);
             logger.error(`Login error: ${error}`);
-            res.status(500).json({error: 'Internal server error'});
+            res.status(500).json({error: 'Server is currently busy, try again later'});
         }
     }
 
@@ -252,7 +253,7 @@ export class AuthController {
             res.json({message: 'Logged out successfully'});
         } catch (error) {
             logger.error(`Logout error: ${error}`);
-            res.status(500).json({error: 'Internal server error'});
+            res.status(500).json({error: 'Server is currently busy, try again later'});
         }
     }
 }

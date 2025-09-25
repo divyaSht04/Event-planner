@@ -1,51 +1,6 @@
 import { Knex } from "knex";
 import { logger } from '../config/LoggerConfig';
-
-export interface Event {
-  id?: number;
-  title: string;
-  description?: string;
-  event_date: Date;
-  location: string;
-  event_type: 'public' | 'private';
-  created_by: number;
-  category_id?: number | null;
-  created_at?: Date;
-  updated_at?: Date;
-}
-
-export interface CreateEventData {
-  title: string;
-  description?: string;
-  event_date: Date;
-  location: string;
-  event_type: 'public' | 'private';
-  created_by: number;
-  category_id?: number | null;
-  tag_ids?: number[];
-}
-
-export interface UpdateEventData {
-  title?: string;
-  description?: string;
-  event_date?: Date;
-  location?: string;
-  event_type?: 'public' | 'private';
-  category_id?: number | null;
-  tag_ids?: number[];
-}
-
-export interface EventFilters {
-  event_type?: 'public' | 'private';
-  created_by?: number;
-  user_id?: number; // For filtering events by user (used in my-events)
-  search?: string; 
-  upcoming?: boolean; // Filter for upcoming events
-  category_id?: number;
-  tag_ids?: number[];
-  date_start?: string; // Start date for date range filtering (YYYY-MM-DD)
-  date_end?: string; // End date for date range filtering (YYYY-MM-DD)
-}
+import type { Event, CreateEventData, UpdateEventData, EventFilters } from "./model-types";
 
 export class EventModel {
   private db: Knex;
@@ -405,13 +360,13 @@ export class EventModel {
   }
 
   async getEventTags(eventId: number): Promise<any[]> {
-    return await this.db("event_tags")
-      .leftJoin("tags", "event_tags.tag_id", "tags.id")
-      .where("event_tags.event_id", eventId)
-      .select([
-        "tags.id",
-        "tags.name",
-        "tags.description"
-      ]);
+    return this.db("event_tags")
+        .leftJoin("tags", "event_tags.tag_id", "tags.id")
+        .where("event_tags.event_id", eventId)
+        .select([
+            "tags.id",
+            "tags.name",
+            "tags.description"
+        ]);
   }
 }

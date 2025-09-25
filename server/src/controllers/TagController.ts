@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Knex } from 'knex';
-import TagModel, { CreateTagData, UpdateTagData } from '../models/Tag';
+import TagModel from '../models/Tag';
+import type { CreateTagData, UpdateTagData } from '../models/model-types';
 import { logger } from '../config/LoggerConfig';
 
 class TagController {

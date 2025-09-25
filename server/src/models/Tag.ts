@@ -1,22 +1,5 @@
 import { Knex } from 'knex';
-
-export interface Tag {
-  id?: number;
-  name: string;
-  description?: string;
-  created_at?: Date;
-  updated_at?: Date;
-}
-
-export interface CreateTagData {
-  name: string;
-  description?: string;
-}
-
-export interface UpdateTagData {
-  name?: string;
-  description?: string;
-}
+import type { Tag, CreateTagData, UpdateTagData } from "./model-types";
 
 class TagModel {
   private tableName = 'tags';

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Knex } from 'knex';
-import CategoryModel, { CreateCategoryData, UpdateCategoryData } from '../models/Category';
+import CategoryModel from '../models/Category';
+import type { CreateCategoryData, UpdateCategoryData } from '../models/model-types';
 import { logger } from '../config/LoggerConfig';
 
 class CategoryController {
