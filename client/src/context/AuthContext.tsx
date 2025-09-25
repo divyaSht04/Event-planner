@@ -84,8 +84,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await authService.refreshToken();
       setUser(response.user);
+      console.log('token refresh successful');
     } catch (error: any) {
-      console.log('Token refresh failed:', error.message);
+      console.log('token refresh failed:', error.message);
       setUser(null);
       throw error;
     }
@@ -95,9 +96,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const checkAuthStatus = async () => {
       try {
         updateState({ isLoading: true });
-        
-        const user = await authService.checkAuth();
-        setUser(user);
+
+        // Try to refresh token to check if user is authenticated
+        await refreshToken();
       } catch (error) {
         console.log('No existing authentication found');
         setUser(null);
