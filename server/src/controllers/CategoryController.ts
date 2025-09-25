@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Knex } from 'knex';
 import CategoryModel, { CreateCategoryData, UpdateCategoryData } from '../models/Category';
+import { logger } from '../config/LoggerConfig';
 
 class CategoryController {
   private categoryModel: CategoryModel;
@@ -27,7 +28,7 @@ class CategoryController {
         message: 'Categories retrieved successfully'
       });
     } catch (error: any) {
-      console.error('Error getting categories:', error);
+      logger.error(`Error getting categories: ${error}`);
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve categories'
@@ -71,7 +72,7 @@ class CategoryController {
         message: 'Category retrieved successfully'
       });
     } catch (error: any) {
-      console.error('Error getting category:', error);
+      logger.error(`Error getting category: ${error}`);
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve category'
@@ -124,7 +125,7 @@ class CategoryController {
         message: 'Category created successfully'
       });
     } catch (error: any) {
-      console.error('Error creating category:', error);
+      logger.error(`Error creating category: ${error}`);
       res.status(500).json({
         success: false,
         error: 'Failed to create category'
@@ -201,7 +202,7 @@ class CategoryController {
         message: 'Category updated successfully'
       });
     } catch (error: any) {
-      console.error('Error updating category:', error);
+      logger.error(`Error updating category: ${error}`);
       res.status(500).json({
         success: false,
         error: 'Failed to update category'
@@ -257,7 +258,7 @@ class CategoryController {
         message: 'Category deleted successfully'
       });
     } catch (error: any) {
-      console.error('Error deleting category:', error);
+      logger.error(`Error deleting category: ${error}`);
       res.status(500).json({
         success: false,
         error: 'Failed to delete category'
@@ -296,7 +297,7 @@ class CategoryController {
         message: 'Category events retrieved successfully'
       });
     } catch (error: any) {
-      console.error('Error getting category events:', error);
+      logger.error(`Error getting category events: ${error}`);
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve category events'

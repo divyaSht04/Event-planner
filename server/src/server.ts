@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { setupSwagger } from './config/swagger';
+import { loggingMiddleware } from './middleware/loggingMiddleware';
+import { logger } from './config/LoggerConfig';
 import authRoutes from './routes/auth';
 import eventRoutes from './routes/events';
 import tagRoutes from './routes/tagRoutes';
@@ -25,13 +27,9 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-setupSwagger(app);
+app.use(loggingMiddleware);
 
-// Add some debugging middleware
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path} - Origin: ${req.get('Origin')}`);
-  next();
-});
+setupSwagger(app);
 
 // Routes
 app.get('/api/health', (req, res) => {
@@ -44,6 +42,5 @@ app.use('/api/tags', tagRoutes);
 app.use('/api/categories', categoryRoutes);
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`API Documentation available at http://localhost:${PORT}/api-docs`);
+  logger.info(`Server is running on port ${PORT}`);
 });

@@ -8,6 +8,7 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/AuthController';
 import { UserModel } from '../models/User';
+import { logger } from '../config/LoggerConfig';
 import knex from 'knex';
 import dbConfig from '../utils/database';
 import dotenv from 'dotenv';
@@ -17,7 +18,7 @@ dotenv.config();
 const router = Router();
 
 const db = knex(dbConfig);
-console.log(db.client.config.connection.password);
+logger.debug('Database connection initialized');
 
 const userModel = new UserModel(db);
 

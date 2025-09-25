@@ -1,6 +1,7 @@
 import {Request, Response} from 'express';
 import jwt from 'jsonwebtoken';
 import {UserModel, CreateUserData, LoginData} from '../models/User';
+import { logger } from '../config/LoggerConfig';
 
 export class AuthController {
     private userModel: UserModel;
@@ -62,14 +63,17 @@ export class AuthController {
             secure: false,
             sameSite: 'lax'
         });
-        console.log('🗑️ Cookies cleared successfully');
+        logger.info('🗑️ Cookies cleared successfully');
     }
 
     async register(req: Request, res: Response): Promise<void> {
         try {
             const {email, password, name, phone_number}: CreateUserData = req.body;
 
+            logger.info(`User registration attempt: ${email}`);
+
             if (!email || !password || !name || !phone_number) {
+                logger.warn(`Registration failed - missing fields: ${email}`);
                 res.status(400)
                 .json({error: 'Email, password, name, and phone number are required'});
                 return;
@@ -111,8 +115,8 @@ export class AuthController {
            
 
             const user = await this.userModel.create(userData);
-            console.log('User data:', user.id, user.email, user.name, user.phone_number);
-            console.log('Created user:', user.id);
+            logger.info(`User data:, ${user.id}, ${user.email}, ${user.name}, ${user.phone_number}`);
+            logger.info(`Created user:, ${user.id}`);
 
             const accessToken = this.generateAccessToken(user.id!, user.email);
             const refreshToken = this.generateRefreshToken(user.id!, user.email);
@@ -120,6 +124,8 @@ export class AuthController {
             await this.userModel.updateRefreshToken(user.id!, refreshToken);
 
             this.setAuthCookies(res, accessToken, refreshToken);
+
+            logger.info(`User registered successfully: ${email}`);
 
             res.status(201).json({
                 message: 'User registered successfully',
@@ -131,7 +137,8 @@ export class AuthController {
                 },
             });
         } catch (error) {
-            console.error('Registration error:', error);
+            logger.error(`Registration failed: ${req.body.email || 'unknown'} - ${error}`);
+            logger.error(`Registration error: ${error}`);
             res.status(500).json({error: 'Internal server error'});
         }
     }
@@ -140,7 +147,10 @@ export class AuthController {
         try {
             const {email, password}: LoginData = req.body;
 
+            logger.info(`Login attempt: ${email}`);
+
             if (!email || !password) {
+                logger.warn(`Login failed - missing credentials: ${email}`);
                 res.status(400).json({error: 'Email and password are required'});
                 return;
             }
@@ -163,6 +173,8 @@ export class AuthController {
 
             this.setAuthCookies(res, accessToken, refreshToken);
 
+            logger.info(`Login successful: ${email}`);
+
             res.json({
                 message: 'Login successful',
                 user: {
@@ -175,7 +187,8 @@ export class AuthController {
                 refreshToken: refreshToken
             });
         } catch (error) {
-            console.error('Login error:', error);
+            logger.error(`Login failed: ${req.body.email || 'unknown'} - ${error}`);
+            logger.error(`Login error: ${error}`);
             res.status(500).json({error: 'Internal server error'});
         }
     }
@@ -199,14 +212,12 @@ export class AuthController {
                 return;
             }
 
-            // Generate new tokens
             const newAccessToken = this.generateAccessToken(user.id!, user.email);
             const newRefreshToken = this.generateRefreshToken(user.id!, user.email);
 
             // Update refresh token in database
             await this.userModel.updateRefreshToken(user.id!, newRefreshToken);
 
-            // Set new cookies
             this.setAuthCookies(res, newAccessToken, newRefreshToken);
 
             res.json({
@@ -218,7 +229,7 @@ export class AuthController {
                 },
             });
         } catch (error) {
-            console.error('Refresh token error:', error);
+            logger.error(`Refresh token error: ${error}`);
             this.clearAuthCookies(res);
             res.status(401).json({error: 'Invalid refresh token'});
         }
@@ -240,7 +251,7 @@ export class AuthController {
 
             res.json({message: 'Logged out successfully'});
         } catch (error) {
-            console.error('Logout error:', error);
+            logger.error(`Logout error: ${error}`);
             res.status(500).json({error: 'Internal server error'});
         }
     }

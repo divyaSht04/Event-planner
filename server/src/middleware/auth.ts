@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { UserModel } from '../models/User';
+import { logger } from '../config/LoggerConfig';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -28,12 +29,11 @@ export const authenticateToken = (userModel: UserModel) => {
         return;
       }
 
-      console.log('🔍 Authenticating token for:', req.method, req.path);
+      logger.info(`Authenticating token for: ${req.method} ${req.path}`);
 
       const jwtSecret = process.env.JWT_SECRET!;
       const decoded = jwt.verify(accessToken, jwtSecret) as JwtPayload;
-      console.log(decoded);
-      console.log('User ID from token:', decoded.id);
+      logger.debug(`Token decoded for user: ${decoded.id}`);
 
       
       const user = await userModel.findById(decoded.id);
@@ -51,7 +51,7 @@ export const authenticateToken = (userModel: UserModel) => {
 
       next();
     } catch (error) {
-      console.error('Authentication error:', error);
+      logger.error(`Authentication error: ${error}`);
       
       if (error instanceof jwt.JsonWebTokenError) {
         res.status(401).json({ error: 'Invalid token' });
