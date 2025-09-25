@@ -1,6 +1,6 @@
 import { Knex } from "knex";
 import bcrypt from "bcrypt";
-import type { User, CreateUserData, LoginData } from "./model-types";
+import type { User, CreateUserData } from "./model-types";
 
 export class UserModel {
   private db: Knex;

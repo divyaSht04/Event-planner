@@ -72,7 +72,7 @@ class TagController {
       const { name, description }: CreateTagData = req.body;
 
       // Validation
-      if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      if (!name || name.trim().length === 0) {
         res.status(400).json({
           success: false,
           error: 'Tag name is required and must be a non-empty string'
@@ -145,7 +145,7 @@ class TagController {
 
       // Validation
       if (name !== undefined) {
-        if (typeof name !== 'string' || name.trim().length === 0) {
+        if ( name.trim().length === 0) {
           res.status(400).json({
             success: false,
             error: 'Tag name must be a non-empty string'

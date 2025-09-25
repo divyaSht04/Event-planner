@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Header, Footer } from '../../components';
 import { CustomButton, CustomFormField } from '../../components';
-import { eventService } from '../../services/events';
+import { eventService } from '../../services';
 import tagService from '../../services/tags';
 import categoryService from '../../services/categories';
 import type { Event, Tag, Category } from '../../services/events';
