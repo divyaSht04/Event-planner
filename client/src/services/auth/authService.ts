@@ -8,13 +8,23 @@ import type {
 
 class AuthService {
 
-  async register(data: RegisterRequest): Promise<AuthResponse> {
+  async register(data: RegisterRequest): Promise<{ message: string; email: string }> {
     try {
-      const response = await api.post<AuthResponse>('/auth/register', data);
+      const response = await api.post<{ message: string; email: string }>('/auth/register', data);
       return response.data;
     } catch (error: any) {
       console.error('Registration error:', error.response?.data || error.message);
       throw new Error(error.response?.data?.error || 'Registration failed');
+    }
+  }
+
+  async verifyOTP(email: string, otp: string): Promise<AuthResponse> {
+    try {
+      const response = await api.post<AuthResponse>('/auth/verify-otp', { email, otp });
+      return response.data;
+    } catch (error: any) {
+      console.error('OTP verification error:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.error || 'OTP verification failed');
     }
   }
 
