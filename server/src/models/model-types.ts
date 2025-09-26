@@ -68,6 +68,8 @@ export interface EventFilters {
   tag_ids?: number[];
   date_start?: string;
   date_end?: string;
+  sortBy?: 'event_date' | 'created_at' | 'title';
+  sortOrder?: 'asc' | 'desc';
 }
 
 // Category related interfaces

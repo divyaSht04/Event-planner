@@ -100,6 +100,8 @@ export class EventController {
         tag_ids,
         date_start,
         date_end,
+        sortBy,
+        sortOrder,
         page = 1,
         limit = 10,
       } = req.query;
@@ -147,6 +149,15 @@ export class EventController {
       
       if (date_end) {
         filters.date_end = date_end as string;
+      }
+
+      // Sorting
+      if (sortBy) {
+        filters.sortBy = sortBy as 'event_date' | 'created_at' | 'title';
+      }
+      
+      if (sortOrder) {
+        filters.sortOrder = sortOrder as 'asc' | 'desc';
       }
 
       const pageNum = parseInt(page as string, 10);
@@ -223,6 +234,8 @@ export class EventController {
         tag_ids,
         date_start,
         date_end,
+        sortBy,
+        sortOrder,
         page = 1,
         limit = 20,
       } = req.query;
@@ -267,6 +280,15 @@ export class EventController {
       
       if (date_end) {
         filters.date_end = date_end as string;
+      }
+
+      // Sorting
+      if (sortBy) {
+        filters.sortBy = sortBy as 'event_date' | 'created_at' | 'title';
+      }
+      
+      if (sortOrder) {
+        filters.sortOrder = sortOrder as 'asc' | 'desc';
       }
 
       const pageNum = parseInt(page as string, 10);

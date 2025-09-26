@@ -18,6 +18,8 @@ const MyEvents: React.FC = () => {
   const [upcoming, setUpcoming] = useState(false);
   const [dateStart, setDateStart] = useState('');
   const [dateEnd, setDateEnd] = useState('');
+  const [sortBy, setSortBy] = useState<'event_date' | 'created_at' | 'title'>('event_date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -46,7 +48,9 @@ const MyEvents: React.FC = () => {
         category_id: selectedCategoryId || undefined,
         tag_ids: selectedTagIds.length > 0 ? selectedTagIds : undefined,
         date_start: dateStart || undefined,
-        date_end: dateEnd || undefined
+        date_end: dateEnd || undefined,
+        sortBy: sortBy || undefined,
+        sortOrder: sortOrder || undefined
       };
       
       const response = await eventService.getMyEvents(filters);
@@ -129,6 +133,8 @@ const MyEvents: React.FC = () => {
     setDateEnd('');
     setSelectedCategoryId(null);
     setSelectedTagIds([]);
+    setSortBy('event_date');
+    setSortOrder('asc');
     loadMyEvents(1);
   };
 
@@ -334,6 +340,34 @@ const MyEvents: React.FC = () => {
                 value={dateEnd}
                 onChange={(e) => setDateEnd(e.target.value)}
               />
+            </div>
+
+            {/* Sorting */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Sort By</label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'event_date' | 'created_at' | 'title')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="event_date">Event Date</option>
+                  <option value="created_at">Created Date</option>
+                  <option value="title">Title</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Sort Order</label>
+                <select
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="asc">Ascending</option>
+                  <option value="desc">Descending</option>
+                </select>
+              </div>
             </div>
 
             {/* Tags */}
