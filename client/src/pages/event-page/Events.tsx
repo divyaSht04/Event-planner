@@ -156,7 +156,7 @@ const Events: React.FC = () => {
             <p className="text-gray-600">
               Discover and attend events happening in your community
             </p>
-            {pagination.totalCount > 0 && (
+            {pagination.totalCount > 0 && events.length > 0 && (
               <p className="text-sm text-gray-500">
                 Showing {events.length} of {pagination.totalCount} events
                 {pagination.totalPages > 1 && ` (Page ${pagination.currentPage} of ${pagination.totalPages})`}
@@ -412,7 +412,7 @@ const Events: React.FC = () => {
               </div>
             )}
 
-            {pagination.totalPages > 1 && (
+            {pagination.totalPages > 1 && events.length > 0 && (
               <div className="flex items-center justify-center gap-2 pt-8">
                 <CustomButton
                   variant="secondary"
