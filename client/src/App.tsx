@@ -4,7 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context';
 import { HomePage, DashboardPage, LoginPage, SignupPage, VerifyOTPPage, NotFound } from './pages';
 import { Events, CreateEvent, EditEvent, EventDetails, MyEvents } from './pages/event-page';
-import { ProtectedRoute } from './components';
+import { ProtectedRoute, PublicOnlyRoute } from './components';
 
 const App: React.FC = () => {
   return (
@@ -13,9 +13,21 @@ const App: React.FC = () => {
         <div className="App">
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/auth/login" element={<LoginPage />} />
-            <Route path="/auth/signup" element={<SignupPage />} />
-            <Route path="/verify-otp" element={<VerifyOTPPage />} />
+            <Route path="/auth/login" element={
+              <PublicOnlyRoute>
+                <LoginPage />
+              </PublicOnlyRoute>
+            } />
+            <Route path="/auth/signup" element={
+              <PublicOnlyRoute>
+                <SignupPage />
+              </PublicOnlyRoute>
+            } />
+            <Route path="/verify-otp" element={
+              <PublicOnlyRoute>
+                <VerifyOTPPage />
+              </PublicOnlyRoute>
+            } />
             
             <Route path="/events" element={
               <ProtectedRoute>
