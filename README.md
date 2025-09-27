@@ -1,15 +1,41 @@
-# Event Planning Application
+# 🎉 Event Planner - Full-Stack Event Management Application
 
-A comprehensive full-stack event planning application that allows users to create, manage, and browse events with secure authentication and a responsive UI. Built with React (TypeScript) frontend and Node.js (Express with TypeScript) backend.
+A comprehensive, secure, and user-friendly event planning platform that enables users to create, manage, and discover events. Built with modern technologies and best practices for scalability, security, and exceptional user experience.
 
-## Engineering Decisions
+## 🌟 Key Features at a Glance
 
-### Tech Stack Selection
-- **Frontend**: React + TypeScript + Vite + Tailwind CSS + Axios
-- **Backend**: Node.js + Express + TypeScript + Knex.js
-- **Database**: MySQL with Knex.js query builder
-- **Authentication**: JWT with HTTP-only cookies + refresh tokens
-- **Development**: Hot module replacement (Vite) + nodemon for auto-restart
+- **🔐 Secure Authentication** - Email verification with OTP, JWT tokens, auto-refresh
+- **📅 Complete Event Management** - Create, edit, delete, and browse events
+- **🔍 Advanced Search & Filtering** - Find events by multiple criteria with smart sorting
+- **📱 Responsive Design** - Works perfectly on all devices
+- **🛡️ Security-First** - Protected routes, input validation, authorization checks
+- **⚡ Modern Tech Stack** - React 18, TypeScript, Express, MySQL, Tailwind CSS
+
+## 🛠️ Technology Stack
+
+### **Frontend Architecture**
+- **React 18** with TypeScript for type safety and modern features
+- **Vite** for lightning-fast development and optimized builds
+- **Tailwind CSS** for utility-first styling and responsive design
+- **React Router** for client-side routing and navigation guards
+- **Axios** for HTTP requests with interceptors and error handling
+- **React Context** for global state management
+- **React Hot Toast** for elegant user notifications
+
+### **Backend Architecture**
+- **Node.js + Express** with TypeScript for scalable server development
+- **Knex.js** query builder for MySQL with migration management
+- **JWT Authentication** with access/refresh token pattern
+- **bcrypt** for secure password hashing
+- **Winston** for structured logging
+- **Helmet** for security headers
+- **CORS** for secure cross-origin requests
+
+### **Database & Infrastructure**
+- **MySQL** relational database for complex relationships
+- **Migration-based schema management** for version control
+- **Connection pooling** for optimal database performance
+- **Parameterized queries** for SQL injection prevention
 
 ### Key Architectural Choices
 
@@ -28,7 +54,7 @@ A comprehensive full-stack event planning application that allows users to creat
 - **Component Organization**: Pages grouped by feature (auth-pages/, event-page/) for maintainability
 - **Custom Component Library**: Reusable CustomButton, CustomInput, CustomFormField for consistency
 - **Context-Based State**: Authentication context for global auth state management
-- **Error Boundaries**: Dedicated NotFound and AccessDenied pages for user experience
+- **Error Boundaries**: Dedicated NotFound for user experience
 
 #### 4. Backend Architecture
 - **MVC Pattern**: Separate models, controllers, and routes for clean separation of concerns
@@ -42,28 +68,37 @@ A comprehensive full-stack event planning application that allows users to creat
 - **CORS Configuration**: Specific origin allowlist and credential support
 - **Input Validation**: Server-side validation for all user inputs and data integrity
 
-## Setup Instructions
-
 ### Prerequisites
-- Node.js (v18 or higher)
-- MySQL database server
-- npm package manager
+- **Node.js** (v18 or higher) 
+- **MySQL** (v8.0 or higher)
+- **npm** package manager (comes with Node.js)
+- **Git** for version control
 
 ### Environment Configuration
 Create a `.env` file in the `server` directory with the following variables:
 ```env
+# Database Configuration
 DB_HOST=localhost
 DB_PORT=3306
 DB_USER=eventuser
 DB_PASSWORD=eventpass
 DB_NAME=event_planner
-JWT_SECRET=secret_jwt_key
-JWT_REFRESH_SECRET=_secret_refresh_key
+
+# JWT Security
+JWT_SECRET=your_super_secure_jwt_secret_key_here
+JWT_REFRESH_SECRET=your_super_secure_refresh_secret_key_here
+
+# Server Configuration
 PORT=3001
 FRONTEND_URL=http://localhost:5173
+
+# Email Configuration (for OTP verification)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_app_password
+EMAIL_FROM=your_email@gmail.com
 ```
-
-
 
 ### Backend Setup
 1. **Navigate to server directory and install dependencies:**
@@ -103,85 +138,101 @@ FRONTEND_URL=http://localhost:5173
 
 ## API Documentation
 
-### Authentication Endpoints
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - User login
-- `POST /api/auth/logout` - User logout
-- `POST /api/auth/refresh` - Refresh access token
+### 🔐 **Authentication Endpoints**
+- `POST /api/auth/register` - Register new user (requires email verification)
+- `POST /api/auth/verify-otp` - Verify email with OTP code
+- `POST /api/auth/login` - User login with credentials
+- `POST /api/auth/logout` - Secure logout with token cleanup
+- `POST /api/auth/refresh` - Automatic token refresh
 - `GET /api/auth/me` - Get current user profile
 
-### Event Management Endpoints
-- `GET /api/events` - Get all public events (with pagination, search, filtering)
-- `GET /api/events/my` - Get current user's events
-- `GET /api/events/:id` - Get specific event details
-- `POST /api/events` - Create new event
-- `PUT /api/events/:id` - Update event (owner only)
-- `DELETE /api/events/:id` - Delete event (owner only)
+### 📅 **Event Management Endpoints**
+- `GET /api/events` - Get all public events with pagination, search, and filters
+  - Query params: `search`, `category_id`, `tag_ids`, `event_type`, `upcoming`, `date_start`, `date_end`, `sortBy`, `sortOrder`, `page`, `limit`
+- `GET /api/events/my-events` - Get current user's events with same filtering options
+- `GET /api/events/:id` - Get specific event details (public events or owned events)
+- `POST /api/events` - Create new event (authenticated users only)
+- `PUT /api/events/:id` - Update event (owner only with authorization check)
+- `DELETE /api/events/:id` - Delete event (owner only with authorization check)
+
+### 🏷️ **Category & Tag Endpoints**
+- `GET /api/categories` - Get all available categories
+- `GET /api/categories/:id/events` - Get events by category
+- `GET /api/tags` - Get all available tags
+- `GET /api/tags/:id/events` - Get events by tag
 
 
 
 
 ## Current Features
 
-### ✅ Complete Authentication System
-- User registration with email validation
-- Secure login/logout with JWT tokens
-- Automatic token refresh mechanism
-- Protected routes and navigation guards
-- Authentication context and state management
+## ✨ Complete Feature Set
 
-### ✅ Event Management System
-- **Create Events**: Full event creation with validation
-- **Browse Events**: Public events listing with search and filters
-- **My Events**: Personal event management dashboard
-- **Event Details**: Comprehensive event information display
-- **Edit/Delete**: Full CRUD operations for event owners
+### 🔐 **Advanced Authentication System**
+- **Email Verification**: OTP-based registration with nodemailer integration
+- **Secure Login/Logout**: JWT tokens with HTTP-only cookies
+- **Auto Token Refresh**: Seamless session management with 15min/7day token lifecycle
+- **Route Protection**: Both frontend and backend authorization
+- **UX Improvements**: Authenticated users automatically redirected from auth pages
 
-### ✅ Advanced Features
-- **Search & Filter**: Find events by title, description, location, type, and tags
-- **Pagination**: Server-side pagination for performance
-- **Responsive Design**: Mobile-first design with Tailwind CSS
-- **Error Handling**: Professional 404 page
-- **Future Date Validation**: Prevents creation of past events
-- **Owner Authorization**: Only event creators can modify their events
+### 📅 **Comprehensive Event Management**
+- **Create Events**: Rich form with categories, tags, dates, and validation
+- **Browse Public Events**: Discover community events with advanced search
+- **My Events Dashboard**: Personal event management with full CRUD operations
+- **Event Details**: Complete event information with owner controls
+- **Smart Authorization**: Only event owners can edit/delete their events
 
-### ✅ User Experience
-- **Custom Components**: Consistent UI with reusable components
-- **Loading States**: Visual feedback during API calls
-- **Form Validation**: Client and server-side validation
-- **Authentication Prompts**: Login encouragement for non-authenticated users
-## Assumptions Made During Development
+### 🔍 **Advanced Search & Discovery**
+- **Multi-Criteria Search**: Title, description, location, categories, and tags
+- **Dynamic Sorting**: Sort by date, creation time, or title (ascending/descending)
+- **Smart Filtering**: Event type, upcoming events, date ranges
+- **Category System**: Organized event categorization
+- **Tag System**: Flexible event tagging for better discovery
 
-### 1. User Authentication
-- Users must be authenticated to create, edit, or delete events
-- Public events are viewable by all users (authenticated and non-authenticated)
-- Only event owners can modify their own events
-- Email addresses are unique and used as primary user identifiers
+### 🎨 **Premium User Experience**
+- **Responsive Design**: Mobile-first with Tailwind CSS
+- **Smart Pagination**: Hidden when not needed, elegant controls when required
+- **Loading States**: Visual feedback during all operations
+- **Error Handling**: Professional error pages and user feedback
+- **Toast Notifications**: Real-time feedback for user actions
+- **Custom Components**: Consistent UI with reusable component library
 
-### 2. Event Data Model
-- Events have a single owner (creator)
-- Events can be either "public" or "private"
-- Private events are only visible to their owners
-- Tags are stored as comma-separated strings for simplicity
-- Event dates must be in the future when created
+### 🛡️ **Security & Performance**
+- **Input Validation**: Comprehensive client and server-side validation
+- **Authorization Checks**: Event ownership verification at multiple levels
+- **Password Security**: bcrypt hashing
+- **CORS Protection**: Secure cross-origin resource sharing
+- **SQL Injection Prevention**: Parameterized queries with Knex.js
+- **XSS Protection**: HTTP-only cookies
+## 🎯 Project Highlights & Architecture Decisions
 
-### 3. Business Rules
-- Events cannot be created for past dates
-- Users can create unlimited events
-- No RSVP system implemented (future enhancement)
-- No event capacity limits
-- Tags are free-form text (no predefined tag system)
+### **Security-First Development**
+- **Email Verification**: Complete OTP-based registration system with nodemailer
+- **Authorization Layers**: Multiple levels of access control (route-level, component-level, API-level)
+- **Token Management**: Automatic refresh with secure HTTP-only cookies
+- **Input Validation**: Comprehensive validation at both client and server levels
+- **SQL Injection Prevention**: Parameterized queries throughout the application
 
+### **User Experience Excellence**
+- **Smart UI Behavior**: Pagination and count text hidden when not needed
+- **Authentication Flow**: Seamless redirects for authenticated users accessing auth pages
+- **Loading States**: Professional loading indicators during all async operations
+- **Error Handling**: Comprehensive error boundaries and user-friendly error messages
+- **Responsive Design**: Mobile-first approach with elegant desktop scaling
 
-### 4. Security Model
-- JWT tokens stored in HTTP-only cookies for security
-- Refresh tokens have longer lifespan than access tokens
+### **Performance Optimizations**
+- **Server-Side Pagination**: Efficient data loading with configurable page sizes
+- **Database Indexing**: Optimized queries for search and filtering operations
+- **Component Reusability**: Custom component library for consistent UI and reduced bundle size
+- **Lazy Loading**: Strategic code splitting for optimal initial load times
 
-### 5. Data Validation
-- Server-side validation is the source of truth
-- Client-side validation provides immediate user feedback
-- Date/time inputs use HTML5 input types for browser compatibility
-- Text fields have reasonable length limits
+### **Scalability Considerations**
+- **Modular Architecture**: Feature-based organization for easy maintenance and expansion
+- **Migration System**: Database schema versioning for safe production deployments
+- **Environment Configuration**: Flexible configuration for different deployment environments
+- **API Design**: RESTful endpoints designed for future mobile app integration
+
+## 🚀 Getting Started
 
 
 
@@ -205,3 +256,34 @@ npm run build        # Build for production
 npm run preview      # Preview production build
 npm run lint         # Run ESLint
 ```
+
+##  Application 
+
+### **Authentication Flow**
+- Clean, professional login/register pages with real-time validation
+- Email verification with OTP system for secure account creation
+- Automatic redirects for authenticated users
+
+### **Event Management**
+- Intuitive event creation form with rich validation
+- Comprehensive event listing with advanced search and filtering
+- Personal dashboard for managing your own events
+
+### **User Experience**
+- Responsive design that works beautifully on all devices
+- Smart pagination that appears only when needed
+- Toast notifications for all user actions
+
+## 🔮 Future Enhancements
+
+- **🎫 RSVP System**: Event attendance management
+- **💬 Event Comments**: Community interaction features
+- **📧 Email Notifications**: Event reminders and updates
+
+
+## 👨‍💻 Author
+
+**Divya Shrestha**
+- GitHub: [@divyaSht04](https://github.com/divyaSht04)
+- Project: [Event-planner](https://github.com/divyaSht04/Event-planner)
+
