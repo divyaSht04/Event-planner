@@ -1,9 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Header, Footer } from '../components';
 import { useAuth } from '../context';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -36,6 +38,17 @@ const DashboardPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Quick Action */}
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Action</h2>
+            <button 
+              onClick={() => navigate('/events/create')}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              Create New Event
+            </button>
+          </div>
+
           {/* User Info Section */}
           <div className="mt-8 bg-gray-50 p-6 rounded-lg">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Account Information</h2>
@@ -57,24 +70,6 @@ const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <button className="bg-blue-600 text-white p-4 rounded-lg hover:bg-blue-700 transition-colors">
-                Create Event
-              </button>
-              <button className="bg-green-600 text-white p-4 rounded-lg hover:bg-green-700 transition-colors">
-                View Calendar
-              </button>
-              <button className="bg-purple-600 text-white p-4 rounded-lg hover:bg-purple-700 transition-colors">
-                Manage Attendees
-              </button>
-              <button className="bg-gray-600 text-white p-4 rounded-lg hover:bg-gray-700 transition-colors">
-                Settings
-              </button>
-            </div>
-          </div>
         </div>
       </div>
       

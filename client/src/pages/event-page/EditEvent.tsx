@@ -4,11 +4,13 @@ import toast from 'react-hot-toast';
 import { Header, Footer } from '../../components';
 import { CustomForm, CustomFormField, CustomButton } from '../../components';
 import { eventService, tagService, categoryService } from '../../services';
+import { useAuth } from '../../context';
 import type { Event, UpdateEventData, Category, Tag } from '../../services/events';
 
 const EditEvent: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingEvent, setIsLoadingEvent] = useState(true);
@@ -51,6 +53,12 @@ const EditEvent: React.FC = () => {
         setEvent(eventData);
         setCategories(categoriesData);
         setTags(tagsData);
+
+        // Check if user owns this event
+        if (!user || eventData.created_by !== user.id) {
+          setError('You do not have permission to edit this event');
+          return;
+        }
 
         // Pre-populate form with event data
         setFormData({
