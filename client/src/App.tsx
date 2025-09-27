@@ -1,35 +1,116 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { AuthProvider } from './context';
+import { HomePage, DashboardPage, LoginPage, SignupPage, VerifyOTPPage, NotFound } from './pages';
+import { Events, CreateEvent, EditEvent, EventDetails, MyEvents } from './pages/event-page';
+import { ProtectedRoute, PublicOnlyRoute } from './components';
 
-function App() {
-  const [count, setCount] = useState(0)
-
+const App: React.FC = () => {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <AuthProvider>
+      <Router>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/auth/login" element={
+              <PublicOnlyRoute>
+                <LoginPage />
+              </PublicOnlyRoute>
+            } />
+            <Route path="/auth/signup" element={
+              <PublicOnlyRoute>
+                <SignupPage />
+              </PublicOnlyRoute>
+            } />
+            <Route path="/verify-otp" element={
+              <PublicOnlyRoute>
+                <VerifyOTPPage />
+              </PublicOnlyRoute>
+            } />
+            
+            <Route path="/events" element={
+              <ProtectedRoute>
+                <Events />
+              </ProtectedRoute>
+            } />
+            <Route path="/events/:id" element={
+              <ProtectedRoute>
+                <EventDetails />
+              </ProtectedRoute>
+            } />
 
-export default App
+            <Route 
+              path="/events/my" 
+              element={
+                <ProtectedRoute>
+                  <MyEvents />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/events/create" 
+              element={
+                <ProtectedRoute>
+                  <CreateEvent />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/events/edit/:id" 
+              element={
+                <ProtectedRoute>
+                  <EditEvent />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Dashboard route */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          
+          <Toaster 
+            position="top-right"
+            reverseOrder={false}
+            gutter={8}
+            containerClassName=""
+            containerStyle={{}}
+            toastOptions={{
+              className: '',
+              duration: 1500,
+              style: {
+                background: '#ffffffff',
+                color: '#000000ff',
+              },
+              success: {
+                duration: 2000,
+                iconTheme: {
+                  primary: '#45a916ff',
+                  secondary: '#4524c9ff',
+                },
+              },
+              error: {
+                duration: 2500,
+                iconTheme: {
+                  primary: '#ff6b6b',
+                  secondary: '#b93781ff',
+                },
+              },
+            }}
+          />
+        </div>
+      </Router>
+    </AuthProvider>
+  );
+};
+
+export default App;
