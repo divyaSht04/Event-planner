@@ -205,10 +205,21 @@ export class EventController {
         return;
       }
 
+      if (!req.user) {
+        res.status(401).json({ error: 'Authentication required' });
+        return;
+      }
+
       const event = await this.eventModel.findById(eventId);
 
       if (!event) {
         res.status(404).json({ error: 'Event not found' });
+        return;
+      }
+
+      // Check authorization: users can view public events or their own private events
+      if (event.event_type === 'private' && event.created_by !== req.user.id) {
+        res.status(403).json({ error: 'Unauthorized: You can only view your own private events' });
         return;
       }
 
@@ -309,6 +320,8 @@ export class EventController {
           limit: limitNum,
           total: totalCount,
           totalPages,
+          hasNext: pageNum < totalPages,
+          hasPrev: pageNum > 1,
         },
       });
     } catch (error) {
