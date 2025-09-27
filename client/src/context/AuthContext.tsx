@@ -51,18 +51,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (data: RegisterRequest): Promise<void> => {
+  const register = async (data: RegisterRequest): Promise<{ message: string; email: string }> => {
     try {
       updateState({ isLoading: true, error: null });
       
       const response = await authService.register(data);
-      setUser(response.user);
       
-      console.log('Registration successful:', response.message);
+      updateState({ isLoading: false });
+      console.log('OTP sent for registration:', response.message);
+      return response;
     } catch (error: any) {
       updateState({
         isLoading: false,
         error: error.message || 'Registration failed',
+        user: null,
+        isAuthenticated: false,
+      });
+      throw error;
+    }
+  };
+
+  const verifyOTP = async (email: string, otp: string): Promise<void> => {
+    try {
+      updateState({ isLoading: true, error: null });
+      
+      const response = await authService.verifyOTP(email, otp);
+      setUser(response.user);
+      
+      console.log('OTP verification successful:', response.message);
+    } catch (error: any) {
+      updateState({
+        isLoading: false,
+        error: error.message || 'OTP verification failed',
         user: null,
         isAuthenticated: false,
       });
@@ -84,8 +104,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await authService.refreshToken();
       setUser(response.user);
+      console.log('token refresh successful');
     } catch (error: any) {
-      console.log('Token refresh failed:', error.message);
+      console.log('token refresh failed:', error.message);
       setUser(null);
       throw error;
     }
@@ -95,9 +116,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const checkAuthStatus = async () => {
       try {
         updateState({ isLoading: true });
-        
-        const user = await authService.checkAuth();
-        setUser(user);
+
+        // Try to refresh token to check if user is authenticated
+        await refreshToken();
       } catch (error) {
         console.log('No existing authentication found');
         setUser(null);
@@ -112,6 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ...state,
     login,
     register,
+    verifyOTP,
     logout,
     refreshToken,
     clearError,

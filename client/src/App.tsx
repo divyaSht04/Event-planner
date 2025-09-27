@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context';
-import { HomePage, DashboardPage, LoginPage, SignupPage, NotFound } from './pages';
+import { HomePage, DashboardPage, LoginPage, SignupPage, VerifyOTPPage, NotFound } from './pages';
 import { Events, CreateEvent, EditEvent, EventDetails, MyEvents } from './pages/event-page';
 import { ProtectedRoute } from './components';
 
@@ -15,6 +15,7 @@ const App: React.FC = () => {
             <Route path="/" element={<HomePage />} />
             <Route path="/auth/login" element={<LoginPage />} />
             <Route path="/auth/signup" element={<SignupPage />} />
+            <Route path="/verify-otp" element={<VerifyOTPPage />} />
             
             <Route path="/events" element={
               <ProtectedRoute>

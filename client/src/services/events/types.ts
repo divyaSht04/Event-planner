@@ -45,6 +45,8 @@ export interface EventFilters {
   tag_ids?: number[];
   date_start?: string; // Start date for date range filtering (YYYY-MM-DD)
   date_end?: string; // End date for date range filtering (YYYY-MM-DD)
+  sortBy?: 'event_date' | 'created_at' | 'title';
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface EventListResponse {

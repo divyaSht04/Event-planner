@@ -33,7 +33,7 @@ const authController = new AuthController(userModel, jwtSecret, jwtRefreshSecret
  * @swagger
  * /api/auth/register:
  *   post:
- *     summary: Register a new user
+ *     summary: Initiate user registration by sending OTP
  *     tags: [Authentication]
  *     requestBody:
  *       required: true
@@ -56,12 +56,42 @@ const authController = new AuthController(userModel, jwtSecret, jwtRefreshSecret
  *               phone_number:
  *                 type: string
  *     responses:
+ *       200:
+ *         description: OTP sent to email for verification
+ *       400:
+ *         description: Bad request
+ *       409:
+ *         description: User already exists
+ */
+router.post('/register', (req, res) => authController.register(req, res));
+
+/**
+ * @swagger
+ * /api/auth/verify-otp:
+ *   post:
+ *     summary: Verify OTP and complete registration
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - otp
+ *             properties:
+ *               email:
+ *                 type: string
+ *               otp:
+ *                 type: string
+ *     responses:
  *       201:
  *         description: User registered successfully
  *       400:
- *         description: Bad request
+ *         description: Invalid or expired OTP
  */
-router.post('/register', (req, res) => authController.register(req, res));
+router.post('/verify-otp', (req, res) => authController.verifyOTP(req, res));
 
 /**
  * @swagger

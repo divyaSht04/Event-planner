@@ -145,8 +145,12 @@ export class EventModel {
       query = query.where("events.event_date", "<=", new Date(filters.date_end + ' 23:59:59'));
     }
 
+    // Dynamic sorting
+    const sortBy = filters.sortBy || 'event_date';
+    const sortOrder = filters.sortOrder || 'asc';
+    query = query.orderBy(`events.${sortBy}`, sortOrder);
+
     const events = await query
-      .orderBy("events.event_date", "asc")
       .limit(limit)
       .offset(offset);
 

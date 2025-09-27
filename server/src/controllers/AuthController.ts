@@ -3,15 +3,21 @@ import jwt from 'jsonwebtoken';
 import {UserModel} from '../models/User';
 import type { CreateUserData, LoginData } from '../models/model-types';
 import { logger } from '../config/LoggerConfig';
+import { EmailService } from '../services/EmailService';
+import { OTPService } from '../services/OTPService';
 
 export class AuthController {
     private userModel: UserModel;
+    private emailService: EmailService;
+    private otpService: OTPService;
     private readonly jwtSecret: string;
     private readonly jwtRefreshSecret: string;
     private readonly jwtExpiresIn: string;
     private readonly jwtRefreshExpiresIn: string;
     constructor(userModel: UserModel, jwtSecret: string,  jwtRefreshSecret: string,  jwtExpiresIn: string,  jwtRefreshExpiresIn: string) {
         this.userModel = userModel;
+        this.emailService = new EmailService();
+        this.otpService = new OTPService();
         this.jwtSecret = jwtSecret;
         this.jwtRefreshSecret = jwtRefreshSecret;
         this.jwtExpiresIn = jwtExpiresIn;
@@ -113,11 +119,44 @@ export class AuthController {
                 phone_number: phone_number
             };
 
+            const otp = this.otpService.generateOTP();
+
+            this.otpService.storeOTP(email, otp, userData);
+
+            await this.emailService.sendOTP(email, otp);
+
+            logger.info(`OTP sent to ${email} for registration`);
+
+            res.status(200).json({
+                message: 'OTP sent to your email. Please verify to complete registration.',
+                email: email
+            });
+        } catch (error) {
+            logger.error(`Registration failed: ${req.body.email || 'unknown'} - ${error}`);
+            logger.error(`Registration error: ${error}`);
+            res.status(500).json({error: 'Server is currently busy, try again later'});
+        }
+    }
+
+    async verifyOTP(req: Request, res: Response): Promise<void> {
+        try {
+            const { email, otp } = req.body;
+
+            if (!email || !otp) {
+                res.status(400).json({ error: 'Email and OTP are required' });
+                return;
+            }
+
+            const userData = this.otpService.verifyOTP(email, otp);
+
+            if (!userData) {
+                res.status(400).json({ error: 'Invalid or expired OTP' });
+                return;
+            }
 
 
             const user = await this.userModel.create(userData);
-            logger.info(`User data:, ${user.id}, ${user.email}, ${user.name}, ${user.phone_number}`);
-            logger.info(`Created user:, ${user.id}`);
+            logger.info(`User created after OTP verification: ${user.id}, ${user.email}`);
 
             const accessToken = this.generateAccessToken(user.id!, user.email);
             const refreshToken = this.generateRefreshToken(user.id!, user.email);
@@ -126,7 +165,7 @@ export class AuthController {
 
             this.setAuthCookies(res, accessToken, refreshToken);
 
-            logger.info(`User registered successfully: ${email}`);
+            logger.info(`User registered successfully after OTP verification: ${email}`);
 
             res.status(201).json({
                 message: 'User registered successfully',
@@ -138,9 +177,8 @@ export class AuthController {
                 },
             });
         } catch (error) {
-            logger.error(`Registration failed: ${req.body.email || 'unknown'} - ${error}`);
-            logger.error(`Registration error: ${error}`);
-            res.status(500).json({error: 'Server is currently busy, try again later'});
+            logger.error(`OTP verification error: ${error}`);
+            res.status(500).json({ error: 'Server is currently busy, try again later' });
         }
     }
 

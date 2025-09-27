@@ -36,6 +36,8 @@ class EventService {
       }
       if (filters.date_start) params.append('date_start', filters.date_start);
       if (filters.date_end) params.append('date_end', filters.date_end);
+      if (filters.sortBy) params.append('sortBy', filters.sortBy);
+      if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
 
       const queryString = params.toString();
       const url = queryString ? `/events?${queryString}` : '/events';
@@ -63,6 +65,8 @@ class EventService {
       }
       if (filters.date_start) params.append('date_start', filters.date_start);
       if (filters.date_end) params.append('date_end', filters.date_end);
+      if (filters.sortBy) params.append('sortBy', filters.sortBy);
+      if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
 
       const queryString = params.toString();
       const url = queryString ? `/events/my-events?${queryString}` : '/events/my-events';
