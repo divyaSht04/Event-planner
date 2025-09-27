@@ -1,6 +1,8 @@
+import { CreateUserData } from "../models/model-types";
+
 interface OTPData {
   otp: string;
-  userData: any;
+  userData: CreateUserData;
   expiresAt: number;
 }
 
@@ -11,14 +13,14 @@ export class OTPService {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
-  storeOTP(email: string, otp: string, userData: any): void {
+  storeOTP(email: string, otp: string, userData: CreateUserData): void {
     const expiresAt = Date.now() + 10 * 60 * 1000;
     this.otpStore.set(email, { otp, userData, expiresAt });
 
     this.cleanup();
   }
 
-  verifyOTP(email: string, otp: string): any | null {
+  verifyOTP(email: string, otp: string): CreateUserData | null {
     const otpData = this.otpStore.get(email);
 
     if (!otpData) {
