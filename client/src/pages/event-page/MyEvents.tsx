@@ -58,12 +58,22 @@ const MyEvents: React.FC = () => {
       
       // Update pagination state using backend response
       if (response.pagination) {
+        const shouldShowPagination = response.pagination.totalPages > 1 && response.pagination.total > 5;
         setPagination({
           currentPage: response.pagination.page,
-          totalPages: response.pagination.totalPages,
-          hasNext: response.pagination.hasNext,
-          hasPrev: response.pagination.hasPrev,
+          totalPages: shouldShowPagination ? response.pagination.totalPages : 1,
+          hasNext: shouldShowPagination ? response.pagination.hasNext : false,
+          hasPrev: shouldShowPagination ? response.pagination.hasPrev : false,
           totalCount: response.pagination.total
+        });
+      } else {
+        // Reset pagination if no pagination data
+        setPagination({
+          currentPage: 1,
+          totalPages: 1,
+          hasNext: false,
+          hasPrev: false,
+          totalCount: response.events.length
         });
       }
     } catch (err: any) {
@@ -216,7 +226,7 @@ const MyEvents: React.FC = () => {
               </p>
               {pagination.totalCount > 0 && events.length > 0 && (
                 <p className="text-sm text-gray-500">
-                  Showing {events.length} of {pagination.totalCount} events
+                  Showing {((pagination.currentPage - 1) * 5) + 1}-{((pagination.currentPage - 1) * 5) + events.length} of {pagination.totalCount} events
                   {pagination.totalPages > 1 && ` (Page ${pagination.currentPage} of ${pagination.totalPages})`}
                 </p>
               )}
@@ -531,7 +541,7 @@ const MyEvents: React.FC = () => {
             )}
 
             {/* Pagination Controls */}
-            {pagination.totalPages > 1 && events.length > 0 && (
+            {pagination.totalPages > 1 && (
               <div className="flex items-center justify-center gap-2 pt-8">
                 {/* Previous Button */}
                 <CustomButton

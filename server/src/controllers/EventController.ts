@@ -107,9 +107,11 @@ export class EventController {
       } = req.query;
 
       const filters: EventFilters = {};
-      
+
       if (event_type) {
         filters.event_type = event_type as 'public' | 'private';
+      } else {
+        filters.event_type = 'public';
       }
       
       if (search) {
